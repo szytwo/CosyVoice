@@ -56,4 +56,4 @@ results/
 error/
 venv/
 example/
-third_party/Matcha-TTS/
+third_party/*
