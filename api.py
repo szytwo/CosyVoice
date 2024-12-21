@@ -223,7 +223,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             errcode = 0
             errmsg = 'ok'
             full_audio = np.concatenate(generated_audio_list)
-            logging.info(f'full_audio: {full_audio.dtype}')
+            logging.info(f'target_sr: {target_sr} full_audio: {full_audio.dtype}')
             return errcode, errmsg, (target_sr, full_audio)
         else:
             errcode = -2
