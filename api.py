@@ -97,19 +97,17 @@ def clear_cuda_cache():
 
 def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, prompt_wav, instruct_text,
                    seed, stream, speed, source_wav):
-    errcode = 0
-    errmsg = ''
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
 
-    cosyvoice = None
     # 获取需要的模型
     if mode_checkbox_group == '预训练音色':
         cosyvoice = model_manager.get_model("cosyvoice_sft")
     elif mode_checkbox_group in ['跨语种复刻', '语音复刻']: #'3s极速复刻',
         cosyvoice = model_manager.get_model("cosyvoice")
     else:
-        cosyvoice = model_manager.get_model("cosyvoice_instruct")  
+        # cosyvoice = model_manager.get_model("cosyvoice_instruct")
+        cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
 
     # if instruct mode, please make sure that model is iic/CosyVoice-300M-Instruct and not cross_lingual mode
     if mode_checkbox_group in ['自然语言控制']:
@@ -328,7 +326,8 @@ def main():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 在应用启动时加载模型
-    model_manager.get_model("cosyvoice_instruct")
+    # model_manager.get_model("cosyvoice_instruct")
+    model_manager.get_model("cosyvoice2-0.5b")
     logging.info("Models loaded successfully!")
     yield  # 这里是应用运行的时间段
     logging.info("Application shutting down...")  # 在这里可以释放资源    
