@@ -50,8 +50,10 @@ pretrained_models/*
 *_pb2_grpc.py
 *_pb2.py
 *.tar
+*.whl
 
 results/
 error/
 venv/
 example/
+third_party/Matcha-TTS/
