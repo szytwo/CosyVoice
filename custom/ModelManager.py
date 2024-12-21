@@ -1,5 +1,5 @@
 import threading
-from custom.CosyVoice import CosyVoice
+from custom.CosyVoice import CosyVoice, CosyVoice2
 from custom.file_utils import logging
 
 class ModelManager:
@@ -8,12 +8,14 @@ class ModelManager:
             "cosyvoice": None,
             "cosyvoice_sft": None,
             "cosyvoice_instruct": None,
+            "cosyvoice2-0.5b": None,
         }
         self.sft_spk = None
         self.locks = {
             "cosyvoice": threading.Lock(),
             "cosyvoice_sft": threading.Lock(),
             "cosyvoice_instruct": threading.Lock(),
+            "cosyvoice2-0.5b": threading.Lock(),
         }
 
     def _load_model(self, model_type: str):
@@ -32,6 +34,8 @@ class ModelManager:
             return model
         elif model_type == "cosyvoice_instruct":
             return CosyVoice('pretrained_models/CosyVoice-300M-Instruct')
+        elif model_type == "cosyvoice2-0.5b":
+            return CosyVoice2('pretrained_models/CosyVoice2-0.5B')
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
