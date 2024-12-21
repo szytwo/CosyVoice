@@ -29,7 +29,7 @@ from custom.file_utils import load_wav, logging
 from custom.ModelManager import ModelManager
 from custom.AudioProcessor import AudioProcessor
 from custom.TextProcessor import TextProcessor
-from fastapi import FastAPI, File, UploadFile, Query, Form, Request, status
+from fastapi import FastAPI, File, UploadFile, Query, Form
 from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -60,7 +60,7 @@ def generate_seed():
         "value": seed
     }
 
-def postprocess(speech, top_db=60, hop_length=220, win_length=440):
+def postprocess(speech, target_sr, top_db=60, hop_length=220, win_length=440):
     speech, _ = librosa.effects.trim(
         speech, top_db=top_db,
         frame_length=win_length,
@@ -100,6 +100,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
 
+
     # 获取需要的模型
     if mode_checkbox_group == '预训练音色':
         cosyvoice = model_manager.get_model("cosyvoice_sft")
@@ -108,6 +109,9 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     else:
         # cosyvoice = model_manager.get_model("cosyvoice_instruct")
         cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+
+    target_sr = cosyvoice.sample_rate
+    default_data = np.zeros(target_sr)
 
     # if instruct mode, please make sure that model is iic/CosyVoice-300M-Instruct and not cross_lingual mode
     if mode_checkbox_group in ['自然语言控制']:
@@ -191,20 +195,20 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         elif mode_checkbox_group == '3s极速复刻':
             logging.info('get zero_shot inference request')
             logging.info(f'prompt_text: {prompt_text}')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr))
+            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
             set_all_random_seed(seed)
             for i in cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=stream, speed=speed):
                 generated_audio_list.append(i['tts_speech'].numpy().flatten())
         elif mode_checkbox_group == '跨语种复刻':
             logging.info('get cross_lingual inference request')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr))
+            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
             set_all_random_seed(seed)
             for i in cosyvoice.inference_cross_lingual(tts_text, prompt_speech_16k, stream=stream, speed=speed):
                 generated_audio_list.append(i['tts_speech'].numpy().flatten())
         elif mode_checkbox_group == '语音复刻':
             logging.info('get vc long inference request')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr))
-            source_speech_16k = postprocess(load_wav(source_wav, prompt_sr))
+            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+            source_speech_16k = postprocess(load_wav(source_wav, prompt_sr), target_sr)
             set_all_random_seed(seed)
             for i in cosyvoice.inference_vc_long(source_speech_16k, prompt_speech_16k, stream=stream, speed=speed):
                 generated_audio_list.append(i)   
@@ -324,7 +328,7 @@ def main():
 
 # 定义 FastAPI 应用
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fapp: FastAPI):
     # 在应用启动时加载模型
     # model_manager.get_model("cosyvoice_instruct")
     model_manager.get_model("cosyvoice2-0.5b")
@@ -598,8 +602,7 @@ parser.add_argument('--model_dir',
                     default='pretrained_models/CosyVoice-300M',
                     help='local path or modelscope repo id')
 args = parser.parse_args()
-prompt_sr, target_sr = 16000, 22050
-default_data = np.zeros(target_sr)
+prompt_sr = 16000
 
 if __name__ == '__main__':
     # 设置显存比例限制为 50%
@@ -612,6 +615,6 @@ if __name__ == '__main__':
     else:
         try:
             uvicorn.run(app="api:app", host="0.0.0.0", port=args.port, workers=1, reload=False, log_level="info")
-        except Exception as e:
-            logging.error(e)
+        except Exception as ex:
+            logging.error(ex)
             exit(0)
