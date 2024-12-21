@@ -82,9 +82,10 @@ class CosyVoice:
             if len(i) < 0.5 * len(prompt_text):
                 logging.warning('synthesis text {} too short than prompt text {}, this may lead to bad performance'.format(i, prompt_text))
             
-            model_input = self.frontend.frontend_zero_shot(i, prompt_text, prompt_speech_16k, embedding, self.sample_rate,
-                                                           (speech_feat, speech_feat_len), 
-                                                           (speech_token, speech_token_len))
+            model_input = self.frontend.frontend_zero_shot(i, prompt_text, prompt_speech_16k, self.sample_rate,
+                                                           embedding = embedding,
+                                                           speech_feat_obj = (speech_feat, speech_feat_len),
+                                                           speech_token_obj = (speech_token, speech_token_len))
             start_time = time.time()
             logging.info('synthesis text {}'.format(i))
 
