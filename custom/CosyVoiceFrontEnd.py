@@ -127,8 +127,8 @@ class CosyVoiceFrontEnd:
             text = text.replace(" - ", "，")
             text = remove_bracket(text)
             text = re.sub(r'[，,、]+$', '。', text)
-            texts = list(split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "zh", token_max_n=80,
-                                         token_min_n=60, merge_len=20, comma_split=True))
+            texts = list(split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "zh", token_max_n=40,
+                                         token_min_n=20, merge_len=10, comma_split=True))
         else:
             if self.use_ttsfrd:
                 texts = [i["text"] for i in json.loads(self.frd.do_voicegen_frd(text))["sentences"]]

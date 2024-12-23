@@ -34,7 +34,6 @@ from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTM
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
-from contextlib import asynccontextmanager
 
 # 全局模型管理器
 model_manager = ModelManager()
@@ -507,7 +506,8 @@ async def zero_shot(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
                                 volume_multiplier = 1.5, 
-                                nonsilent = True
+                                nonsilent = True,
+                                reduce_noise_enabled = True
                             )
     except Exception as e:
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
