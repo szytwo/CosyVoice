@@ -47,7 +47,7 @@ class TextProcessor:
                 lang_tag = '<|ko|>'
         # 判断是否已经以句号结尾
         if text[-1] in ['.', '。', '！', '!', '？', '?']:
-            return f'{lang_tag}{text}。'
+            return f'{lang_tag}{text}'
         # 根据文本内容添加适当的句号
         if lang == 'zh-cn': # 中文文本
             return f'{lang_tag}{text}。'
