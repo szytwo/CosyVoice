@@ -6,6 +6,7 @@ class ModelManager:
     def __init__(self):
         self.models = {
             "cosyvoice": None,
+            "cosyvoice-25hz": None,
             "cosyvoice_sft": None,
             "cosyvoice_instruct": None,
             "cosyvoice2-0.5b": None,
@@ -13,6 +14,7 @@ class ModelManager:
         self.sft_spk = None
         self.locks = {
             "cosyvoice": threading.Lock(),
+            "cosyvoice-25hz": threading.Lock(),
             "cosyvoice_sft": threading.Lock(),
             "cosyvoice_instruct": threading.Lock(),
             "cosyvoice2-0.5b": threading.Lock(),
@@ -25,6 +27,8 @@ class ModelManager:
         logging.info(f"Loading model: {model_type}")
         if model_type == "cosyvoice":
             return CosyVoice('pretrained_models/CosyVoice-300M')
+        elif model_type == "cosyvoice-25hz":
+            return CosyVoice('pretrained_models/CosyVoice-300M-25Hz')
         elif model_type == "cosyvoice_sft":
             model = CosyVoice(
                 'pretrained_models/CosyVoice-300M-SFT',

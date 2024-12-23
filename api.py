@@ -100,15 +100,17 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
 
-
     # 获取需要的模型
     if mode_checkbox_group == '预训练音色':
         cosyvoice = model_manager.get_model("cosyvoice_sft")
     elif mode_checkbox_group in ['跨语种复刻', '语音复刻']: #'3s极速复刻',
         cosyvoice = model_manager.get_model("cosyvoice")
+    elif mode_checkbox_group == '3s极速复刻':
+        # cosyvoice = model_manager.get_model("cosyvoice-25hz")
+        cosyvoice = model_manager.get_model("cosyvoice_instruct")
+        # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     else:
-        # cosyvoice = model_manager.get_model("cosyvoice_instruct")
-        cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+        cosyvoice = model_manager.get_model("cosyvoice_instruct")
 
     target_sr = cosyvoice.sample_rate
     default_data = np.zeros(target_sr)
@@ -326,17 +328,7 @@ def main():
     demo.queue(max_size=4, default_concurrency_limit=2)
     demo.launch(server_name='0.0.0.0', server_port=args.port, debug=False)
 
-# 定义 FastAPI 应用
-@asynccontextmanager
-async def lifespan(fapp: FastAPI):
-    # 在应用启动时加载模型
-    # model_manager.get_model("cosyvoice_instruct")
-    model_manager.get_model("cosyvoice2-0.5b")
-    logging.info("Models loaded successfully!")
-    yield  # 这里是应用运行的时间段
-    logging.info("Application shutting down...")  # 在这里可以释放资源    
-
-app = FastAPI(docs_url=None, lifespan=lifespan)
+app = FastAPI(docs_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  #设置允许的origins来源
