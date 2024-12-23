@@ -24,20 +24,27 @@ class TextProcessor:
             return None
     
     @staticmethod
-    def ensure_sentence_ends_with_period(text, add_lang_tag=False):
+    def ensure_sentence_ends_with_period(text, add_lang_tag:bool = False):
         """
         确保输入文本以适当的句号结尾。
         :param text: 输入文本
+        :param add_lang_tag: 是否添加语言标签
         :return: 修改后的文本
         """
         if not text.strip():
             return text  # 空文本直接返回
         # 根据文本内容添加适当的句号
         lang = TextProcessor.detect_language(text)
-        lang_tag=None
+        lang_tag = ''
         if add_lang_tag:
             if lang == 'zh-cn':  # 中文文本
                 lang_tag = '<|zh|>'
+            elif lang == 'en':  # 英语
+                lang_tag = '<|en|>'
+            elif lang == 'ja':  # 日语
+                lang_tag = '<|jp|>'
+            elif lang == 'ko':  # 韩语
+                lang_tag = '<|ko|>'
         # 判断是否已经以句号结尾
         if text[-1] in ['.', '。', '！', '!', '？', '?']:
             return f'{lang_tag}{text}。'
