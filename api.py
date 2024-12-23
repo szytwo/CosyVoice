@@ -25,7 +25,7 @@ import gc
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('{}/third_party/Matcha-TTS'.format(ROOT_DIR))
 from cosyvoice.utils.common import set_all_random_seed
-from custom.file_utils import load_wav, logging
+from custom.file_utils import load_wav, logging, delete_old_files_and_folders
 from custom.ModelManager import ModelManager
 from custom.AudioProcessor import AudioProcessor
 from custom.TextProcessor import TextProcessor
@@ -35,10 +35,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
 
+result_input_dir='./results/input'
+result_output_dir='./results/output'
+
 # 全局模型管理器
 model_manager = ModelManager()
 # 初始化处理器
-audio_processor = AudioProcessor()
+audio_processor = AudioProcessor(result_input_dir, result_output_dir)
 #设置允许访问的域名
 origins = ["*"]  #"*"，即为所有。
 
@@ -219,6 +222,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             for i in cosyvoice.inference_instruct(tts_text, sft_dropdown, instruct_text, stream=stream, speed=speed):
                 generated_audio_list.append(i['tts_speech'].numpy().flatten())
 
+
         # 合并所有音频片段为一整段
         if len(generated_audio_list) > 0:
             errcode = 0
@@ -237,6 +241,9 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         logging.error(errmsg)
         return errcode, errmsg, (target_sr, default_data)
     finally:
+        # 删除过期文件
+        delete_old_files_and_folders(result_output_dir, 1)
+        delete_old_files_and_folders(result_input_dir, 1)
         clear_cuda_cache()
     
 # 包装处理逻辑
@@ -593,12 +600,16 @@ parser.add_argument('--model_dir',
                     type=str,
                     default='pretrained_models/CosyVoice-300M',
                     help='local path or modelscope repo id')
+# 设置显存比例限制（浮点类型，默认值为 0）
+parser.add_argument("--cuda_memory", type=float, default=0)
 args = parser.parse_args()
 prompt_sr = 16000
 
 if __name__ == '__main__':
-    # 设置显存比例限制为 50%
-    torch.cuda.set_per_process_memory_fraction(0.5, 0)
+    # 设置显存比例限制
+    if args.cuda_memory > 0:
+        logging.info(f"cuda_memory: {args.cuda_memory}")
+        torch.cuda.set_per_process_memory_fraction(args.cuda_memory)
     
     if args.webui:
         model_manager.get_model("cosyvoice_sft")
