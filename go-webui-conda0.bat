@@ -18,7 +18,7 @@ REM 设置 GPU 环境变量，选择显卡
 set CUDA_VISIBLE_DEVICES=0
 
 REM 执行 Python 脚本
-python api.py --webui True --port 9997 --model_dir pretrained_models/CosyVoice-300M-Instruct
+python api.py --webui True --port 9997 --cuda_memory 0.4
 
 REM 保持窗口打开
 pause

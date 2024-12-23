@@ -121,7 +121,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     if mode_checkbox_group in ['自然语言控制']:
         if cosyvoice.frontend.instruct is False:
             errcode = 1
-            errmsg = '您正在使用自然语言控制模式, {}模型不支持此模式, 请使用iic/CosyVoice-300M-Instruct模型'.format(args.model_dir)
+            errmsg = '您正在使用自然语言控制模式, 请使用iic/CosyVoice-300M-Instruct模型'
             return errcode, errmsg, (target_sr, default_data)
         
         if instruct_text == '':
@@ -135,7 +135,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     if mode_checkbox_group in ['跨语种复刻']:
         if cosyvoice.frontend.instruct is True:
             errcode = 3
-            errmsg = '您正在使用跨语种复刻模式, {}模型不支持此模式, 请使用iic/CosyVoice-300M模型'.format(args.model_dir)
+            errmsg = '您正在使用跨语种复刻模式, 请使用iic/CosyVoice-300M模型'
             return errcode, errmsg, (target_sr, default_data)
         
         if instruct_text != '':
@@ -596,10 +596,6 @@ parser.add_argument('--webui',
 parser.add_argument('--port',
                     type=int,
                     default=8000)
-parser.add_argument('--model_dir',
-                    type=str,
-                    default='pretrained_models/CosyVoice-300M',
-                    help='local path or modelscope repo id')
 # 设置显存比例限制（浮点类型，默认值为 0）
 parser.add_argument("--cuda_memory", type=float, default=0)
 args = parser.parse_args()
