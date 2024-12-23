@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo  启动中，请耐心等待
+echo  启动中，请耐心等待 
 REM 定义 Anaconda 路径
 set CONDA_PATH=D:\ProgramData\anaconda3
 
@@ -14,8 +14,11 @@ IF ERRORLEVEL 1 (
     exit /b
 )
 
+REM 设置 GPU 环境变量，选择显卡
+set CUDA_VISIBLE_DEVICES=0
+
 REM 执行 Python 脚本
-python api.py  --port 9987 --model_dir pretrained_models/CosyVoice-300M-Instruct
+python webui.py --model_dir pretrained_models/CosyVoice-300M-Instruct
 
 REM 保持窗口打开
 pause
