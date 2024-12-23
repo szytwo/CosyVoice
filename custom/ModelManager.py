@@ -35,7 +35,10 @@ class ModelManager:
         elif model_type == "cosyvoice_instruct":
             return CosyVoice('pretrained_models/CosyVoice-300M-Instruct')
         elif model_type == "cosyvoice2-0.5b":
-            return CosyVoice2('pretrained_models/CosyVoice2-0.5B')
+            return CosyVoice2(
+                'pretrained_models/CosyVoice2-0.5B',
+                load_jit=True, load_onnx=False, load_trt=False
+            )
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
