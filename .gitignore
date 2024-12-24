@@ -57,3 +57,5 @@ error/
 venv/
 example/
 third_party/Matcha-TTS/
+
+go-api-conda.bat
