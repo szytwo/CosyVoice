@@ -21,16 +21,20 @@ class AudioProcessor:
         os.makedirs(output_dir, exist_ok=True)
 
     @staticmethod
-    def remove_silence(audio, top_db=30):
+    def remove_start_silence(audio, top_db=30):
         """
-        去除静音部分的函数。
+        只去除音频开头的静音部分。如果音频开头没有静音，则直接返回原音频。
         :param audio: np.ndarray，音频数据（Librosa 格式）。
         :param top_db: int，静音检测阈值（分贝）。
         :return: np.ndarray，去除静音后的音频数据。
         """
-        # 使用librosa检测并去除静音部分
-        audio, _ = librosa.effects.trim(audio, top_db=top_db)
-        return audio
+        # 使用 librosa 检测静音并获取静音开始的位置
+        trimmed_audio, index = librosa.effects.trim(audio, top_db=top_db)
+        # 如果开头没有静音，直接返回原音频
+        if index[0] == 0:
+            return audio
+        # 如果有静音，则返回去掉开头静音后的音频
+        return audio[index[0]:]
 
     @staticmethod
     def volume_safely(audio: AudioSegment, volume_multiplier: float = 1.0) -> AudioSegment:

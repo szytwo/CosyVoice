@@ -204,8 +204,8 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             for i in cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=stream, speed=speed):
                 # 获取生成的音频片段
                 generated_audio = i['tts_speech'].numpy().flatten()
-                # 去除音频片段的静音部分
-                generated_audio = AudioProcessor.remove_silence(generated_audio)
+                # 去除音频开头的静音部分
+                generated_audio = AudioProcessor.remove_start_silence(generated_audio)
                 # 将处理后的音频片段添加到列表
                 generated_audio_list.append(generated_audio)
         elif mode_checkbox_group == '跨语种复刻':
