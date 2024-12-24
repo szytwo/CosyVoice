@@ -33,6 +33,8 @@ class AudioProcessor:
         # 如果开头没有静音，直接返回原音频
         if index[0] == 0:
             return audio
+
+        logging.info(f"remove_start_silence: {index[0]}")
         # 如果有静音，则返回去掉开头静音后的音频
         return audio[index[0]:]
 
