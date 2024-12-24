@@ -21,22 +21,27 @@ class AudioProcessor:
         os.makedirs(output_dir, exist_ok=True)
 
     @staticmethod
-    def remove_start_silence(audio, top_db=30):
+    def remove_silence(audio, sr, top_db=30, silence_padding=0.2):
         """
-        只去除音频开头的静音部分。如果音频开头没有静音，则直接返回原音频。
+        去除音频前后静音部分，并保留一定时长的静音。
         :param audio: np.ndarray，音频数据（Librosa 格式）。
+        :param sr: int，采样率。
         :param top_db: int，静音检测阈值（分贝）。
+        :param silence_padding: float，保留静音的时长（单位：秒）。默认保留 200ms。
         :return: np.ndarray，去除静音后的音频数据。
         """
-        # 使用 librosa 检测静音并获取静音开始的位置
+        # 使用 librosa 检测静音并获取静音开始和结束的位置
         trimmed_audio, index = librosa.effects.trim(audio, top_db=top_db)
-        # 如果开头没有静音，直接返回原音频
-        if index[0] == 0:
-            return audio
+        # 计算要保留的静音样本数
+        silence_samples = int(silence_padding * sr)
+        # 保留前端的静音
+        start_index = max(index[0] - silence_samples, 0)
+        # 保留后端的静音
+        end_index = min(index[1] + silence_samples, len(audio))
 
-        logging.info(f"remove_start_silence: {index[0]}")
-        # 如果有静音，则返回去掉开头静音后的音频
-        return audio[index[0]:]
+        logging.info(f"remove silence after: {start_index}-{end_index}")
+        # 返回去除前后静音后，并且保留静音的音频
+        return audio[start_index:end_index]
 
     @staticmethod
     def volume_safely(audio: AudioSegment, volume_multiplier: float = 1.0) -> AudioSegment:
