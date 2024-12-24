@@ -283,11 +283,11 @@ def main():
         tts_text = gr.Textbox(label="输入合成文本", lines=1, value="我是通义实验室语音团队全新推出的生成式语音大模型，提供舒适自然的语音合成能力。")
         with gr.Row():
             mode_checkbox_group = gr.Radio(choices=inference_mode_list, label='选择推理模式', value=inference_mode_list[0])
-            instruction_text = gr.Text(label="操作步骤", value=instruct_dict[inference_mode_list[0]], scale=0.5)
-            sft_dropdown = gr.Dropdown(choices=sft_spk, label='选择预训练音色', value=sft_spk[0], scale=0.25)
+            instruction_text = gr.Text(label="操作步骤", value=instruct_dict[inference_mode_list[0]], scale=2)
+            sft_dropdown = gr.Dropdown(choices=sft_spk, label='选择预训练音色', value=sft_spk[0], scale=1)
             stream = gr.Radio(choices=stream_mode_list, label='是否流式推理', value=stream_mode_list[0][1])
             speed = gr.Number(value=1, label="速度调节(仅支持非流式推理)", minimum=0.5, maximum=2.0, step=0.1)
-            with gr.Column(scale=0.25):
+            with gr.Column(scale=1):
                 seed_button = gr.Button(value="\U0001F3B2")
                 seed = gr.Number(value=0, label="随机推理种子")
 
