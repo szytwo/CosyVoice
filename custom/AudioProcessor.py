@@ -1,6 +1,7 @@
 import os
 import uuid
 import numpy as np
+import librosa
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
 from noisereduce import reduce_noise
@@ -18,7 +19,19 @@ class AudioProcessor:
         self.output_dir = output_dir
         os.makedirs(input_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
-    
+
+    @staticmethod
+    def remove_silence(audio, top_db=30):
+        """
+        去除静音部分的函数。
+        :param audio: np.ndarray，音频数据（Librosa 格式）。
+        :param top_db: int，静音检测阈值（分贝）。
+        :return: np.ndarray，去除静音后的音频数据。
+        """
+        # 使用librosa检测并去除静音部分
+        audio, _ = librosa.effects.trim(audio, top_db=top_db)
+        return audio
+
     @staticmethod
     def volume_safely(audio: AudioSegment, volume_multiplier: float = 1.0) -> AudioSegment:
         """
