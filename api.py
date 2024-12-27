@@ -34,6 +34,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTM
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
+from func_timeout import func_timeout, FunctionTimedOut
 
 result_input_dir='./results/input'
 result_output_dir='./results/output'
@@ -250,14 +251,44 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         delete_old_files_and_folders(result_output_dir, 1)
         delete_old_files_and_folders(result_input_dir, 1)
         clear_cuda_cache()
-    
+
+def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, prompt_wav, instruct_text,
+                   seed, stream, speed, source_wav):
+    """
+    执行generate_audio，带超时，防止卡死
+    """
+    try:
+        errcode, errmsg, audio = func_timeout(
+            300,  # 超时时间
+            generate_audio,
+            kwargs={
+                "tts_text": tts_text,
+                "mode_checkbox_group": mode_checkbox_group,
+                "sft_dropdown": sft_dropdown,
+                "prompt_text": prompt_text,
+                "prompt_wav": prompt_wav,
+                "instruct_text": instruct_text,
+                "seed": seed,
+                "stream": stream,
+                "speed": speed,
+                "source_wav": source_wav,
+            },
+        )
+    except FunctionTimedOut:
+        errcode = -1
+        errmsg = "generate_audio 执行超时"
+        audio = None
+        logging.error(errmsg)
+
+    return errcode, errmsg, audio
+
 # 包装处理逻辑
 def gradio_generate_audio(tts_text, mode_checkbox_group, sft_dropdown, 
                         prompt_text, prompt_wav, 
                         instruct_text, seed, stream, speed,
                         source_wav
     ):
-    errcode, errmsg, audio_data = generate_audio(
+    errcode, errmsg, audio_data = generate_audio_with_timeout(
         tts_text, mode_checkbox_group, sft_dropdown, 
         prompt_text, prompt_wav,
         instruct_text, seed, stream, speed,
@@ -406,7 +437,7 @@ async def seed_vc(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
-    errcode, errmsg, audio = generate_audio(
+    errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = '', 
         mode_checkbox_group = '语音复刻', 
         sft_dropdown = '', 
@@ -458,7 +489,7 @@ async def fast_copy(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
-    errcode, errmsg, audio = generate_audio(
+    errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = text, 
         mode_checkbox_group = '预训练音色', 
         sft_dropdown = sft_dropdown, 
@@ -481,7 +512,7 @@ async def fast_copy(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
-    errcode, errmsg, audio = generate_audio(
+    errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = '', 
         mode_checkbox_group = '语音复刻', 
         sft_dropdown = '', 
@@ -527,7 +558,7 @@ async def zero_shot(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
-    errcode, errmsg, audio = generate_audio(
+    errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = text, 
         mode_checkbox_group = '3s极速复刻', 
         sft_dropdown = '', 
@@ -562,7 +593,7 @@ async def tts(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
-    errcode, errmsg, audio = generate_audio(
+    errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = text, 
         mode_checkbox_group = '预训练音色', 
         sft_dropdown = sft_dropdown, 
