@@ -158,10 +158,10 @@ class CosyVoiceFrontEnd:
             speech_token, speech_token_len = self._extract_speech_token(prompt_speech_16k)
             embedding = self._extract_spk_embedding(prompt_speech_16k)
         else:
-            prompt_text_token, prompt_text_token_len = frontend_input.prompt_token_obj
-            speech_feat, speech_feat_len = frontend_input.speech_feat_obj
-            speech_token, speech_token_len = frontend_input.speech_token_obj
-            embedding = frontend_input.embedding
+            prompt_text_token, prompt_text_token_len = frontend_input["prompt_token_obj"]
+            speech_feat, speech_feat_len = frontend_input["speech_feat_obj"]
+            speech_token, speech_token_len = frontend_input["speech_token_obj"]
+            embedding = frontend_input["embedding"]
 
         if resample_rate == 24000:
             # cosyvoice2, force speech_feat % speech_token = 2
@@ -205,10 +205,10 @@ class CosyVoiceFrontEnd:
             speech_token, speech_token_len = self._extract_speech_token(prompt_speech_16k)
             embedding = self._extract_spk_embedding(prompt_speech_16k)
         else:
-            prompt_text_token, prompt_text_token_len = frontend_input.prompt_token_obj
-            speech_feat, speech_feat_len = frontend_input.speech_feat_obj
-            speech_token, speech_token_len = frontend_input.speech_token_obj
-            embedding = frontend_input.embedding
+            prompt_text_token, prompt_text_token_len = frontend_input["prompt_token_obj"]
+            speech_feat, speech_feat_len = frontend_input["speech_feat_obj"]
+            speech_token, speech_token_len = frontend_input["speech_token_obj"]
+            embedding = frontend_input["embedding"]
 
         if resample_rate == 24000:
             # cosyvoice2, force speech_feat % speech_token = 2
