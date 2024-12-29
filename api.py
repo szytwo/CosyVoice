@@ -113,8 +113,8 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     elif mode_checkbox_group == '3s极速复刻':
         add_lang_tag = True
         # cosyvoice = model_manager.get_model("cosyvoice-25hz")
-        cosyvoice = model_manager.get_model("cosyvoice_instruct")
-        # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+        # cosyvoice = model_manager.get_model("cosyvoice_instruct")
+        cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     elif mode_checkbox_group == '自然语言控制2':
         cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     else:
@@ -244,7 +244,12 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
             set_all_random_seed(seed)
             for i in cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=stream, speed=speed):
-                generated_audio_list.append(i['tts_speech'].numpy().flatten())
+                # 获取生成的音频片段
+                generated_audio = i['tts_speech'].numpy().flatten()
+                # 去除音频开头的静音部分
+                generated_audio = AudioProcessor.remove_silence(generated_audio, target_sr)
+                # 将处理后的音频片段添加到列表
+                generated_audio_list.append(generated_audio)
         else:
             logging.info('get instruct inference request')
             set_all_random_seed(seed)

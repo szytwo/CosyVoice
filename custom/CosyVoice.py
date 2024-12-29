@@ -73,19 +73,25 @@ class CosyVoice:
 
     def inference_zero_shot(self, tts_text, prompt_text, prompt_speech_16k, stream=False, speed=1.0, text_frontend=True):
         prompt_text = self.frontend.text_normalize(prompt_text, split=False, text_frontend=text_frontend)
+
+        prompt_text_token, prompt_text_token_len = self.frontend._extract_text_token(prompt_text)
         prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=self.sample_rate)(prompt_speech_16k)
         speech_feat, speech_feat_len = self.frontend._extract_speech_feat(prompt_speech_resample)
         speech_token, speech_token_len = self.frontend._extract_speech_token(prompt_speech_16k)
         embedding = self.frontend._extract_spk_embedding(prompt_speech_16k)
 
+        frontend_input = {
+            "prompt_token_obj": (prompt_text_token, prompt_text_token_len),
+            "speech_feat_obj": (speech_feat, speech_feat_len),
+            "speech_token_obj": (speech_token, speech_token_len),
+            "embedding": embedding,
+        }
+
         for i in tqdm(self.frontend.text_normalize(tts_text, split=True, text_frontend=text_frontend)):
             if len(i) < 0.5 * len(prompt_text):
                 logging.warning('synthesis text {} too short than prompt text {}, this may lead to bad performance'.format(i, prompt_text))
             
-            model_input = self.frontend.frontend_zero_shot(i, prompt_text, prompt_speech_16k, self.sample_rate,
-                                                           embedding = embedding,
-                                                           speech_feat_obj = (speech_feat, speech_feat_len),
-                                                           speech_token_obj = (speech_token, speech_token_len))
+            model_input = self.frontend.frontend_zero_shot(i, prompt_text, prompt_speech_16k, self.sample_rate, frontend_input)
             start_time = time.time()
             logging.info('synthesis text {}'.format(i))
 
@@ -125,8 +131,22 @@ class CosyVoice:
 
     def inference_instruct2(self, tts_text, instruct_text, prompt_speech_16k, stream=False, speed=1.0, text_frontend=True):
         assert isinstance(self.model, CosyVoice2Model)
+
+        prompt_text_token, prompt_text_token_len = self.frontend._extract_text_token(instruct_text + '<|endofprompt|>')
+        prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=self.sample_rate)(prompt_speech_16k)
+        speech_feat, speech_feat_len = self.frontend._extract_speech_feat(prompt_speech_resample)
+        speech_token, speech_token_len = self.frontend._extract_speech_token(prompt_speech_16k)
+        embedding = self.frontend._extract_spk_embedding(prompt_speech_16k)
+
+        frontend_input = {
+            "prompt_token_obj": (prompt_text_token, prompt_text_token_len),
+            "speech_feat_obj": (speech_feat, speech_feat_len),
+            "speech_token_obj": (speech_token, speech_token_len),
+            "embedding": embedding,
+        }
+
         for i in tqdm(self.frontend.text_normalize(tts_text, split=True, text_frontend=text_frontend)):
-            model_input = self.frontend.frontend_instruct2(i, instruct_text, prompt_speech_16k, self.sample_rate)
+            model_input = self.frontend.frontend_instruct2(i, instruct_text, prompt_speech_16k, self.sample_rate, frontend_input)
             start_time = time.time()
             logging.info('synthesis text {}'.format(i))
             for model_output in self.model.tts(**model_input, stream=stream, speed=speed):
