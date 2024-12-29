@@ -46,11 +46,12 @@ audio_processor = AudioProcessor(result_input_dir, result_output_dir)
 #设置允许访问的域名
 origins = ["*"]  #"*"，即为所有。
 
-inference_mode_list = ['预训练音色', '3s极速复刻', '跨语种复刻', '自然语言控制', '语音复刻']
+inference_mode_list = ['预训练音色', '3s极速复刻', '跨语种复刻', '自然语言控制', '自然语言控制2', '语音复刻']
 instruct_dict = {'预训练音色': '1. 选择预训练音色\n2. 点击生成音频按钮',
                  '3s极速复刻': '1. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n2. 输入prompt文本\n3. 点击生成音频按钮',
                  '跨语种复刻': '1. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n2. 点击生成音频按钮',
                  '自然语言控制': '1. 选择预训练音色\n2. 输入instruct文本\n3. 点击生成音频按钮',
+                 '自然语言控制2': '1. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n2. 输入instruct文本\n3. 点击生成音频按钮',
                  '语音复刻': '1. 选择source音频文件\n2. 选择prompt音频文件，或录入prompt音频，注意不超过30s，若同时提供，优先选择prompt音频文件\n3. 点击生成音频按钮'}
 stream_mode_list = [('否', False), ('是', True)]
 max_val = 0.8
@@ -114,6 +115,8 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         # cosyvoice = model_manager.get_model("cosyvoice-25hz")
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
         # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+    elif mode_checkbox_group == '自然语言控制2':
+        cosyvoice = model_manager.get_model("cosyvoice-25hz")
     else:
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
 
@@ -134,6 +137,18 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         
         if prompt_wav is not None or prompt_text != '':
             logging.info('您正在使用自然语言控制模式, prompt音频/prompt文本会被忽略')
+
+    if mode_checkbox_group in ['自然语言控制2']:
+        if prompt_wav is None:
+            errcode = 6
+            errmsg = 'prompt音频为空，您是否忘记输入prompt音频？'
+            return errcode, errmsg, (target_sr, default_data)
+
+        if instruct_text == '':
+            errcode = 2
+            errmsg = '您正在使用自然语言控制模式, 请输入instruct文本'
+            return errcode, errmsg, (target_sr, default_data)
+
     # if cross_lingual mode, please make sure that model is iic/CosyVoice-300M and tts_text prompt_text are different language
     if mode_checkbox_group in ['跨语种复刻']:
         if cosyvoice.frontend.instruct is True:
@@ -223,13 +238,18 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             source_speech_16k = postprocess(load_wav(source_wav, prompt_sr), target_sr)
             set_all_random_seed(seed)
             for i in cosyvoice.inference_vc_long(source_speech_16k, prompt_speech_16k, stream=stream, speed=speed):
-                generated_audio_list.append(i)   
+                generated_audio_list.append(i)
+        elif mode_checkbox_group == '自然语言控制2':
+            logging.info('get instruct2 inference request')
+            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+            set_all_random_seed(seed)
+            for i in cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=stream, speed=speed):
+                generated_audio_list.append(i['tts_speech'].numpy().flatten())
         else:
             logging.info('get instruct inference request')
             set_all_random_seed(seed)
             for i in cosyvoice.inference_instruct(tts_text, sft_dropdown, instruct_text, stream=stream, speed=speed):
                 generated_audio_list.append(i['tts_speech'].numpy().flatten())
-
 
         # 合并所有音频片段为一整段
         if len(generated_audio_list) > 0:
