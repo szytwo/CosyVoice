@@ -586,13 +586,22 @@ async def zero_shot(
     seed_data = generate_seed()
     seed = seed_data["value"]
 
+    language = language.strip()
+    if language:
+        mode_checkbox_group = '自然语言控制2'
+        instruct_text = f'用{language}说这句话'
+
+    else:
+        mode_checkbox_group = '3s极速复刻'
+        instruct_text = ''
+
     errcode, errmsg, audio = generate_audio_with_timeout(
         tts_text = text, 
-        mode_checkbox_group = '3s极速复刻', 
+        mode_checkbox_group = mode_checkbox_group,
         sft_dropdown = '', 
         prompt_text = prompt_text, 
         prompt_wav = prompt_wav_upload, 
-        instruct_text = '', 
+        instruct_text = instruct_text,
         seed = seed, 
         stream = False, 
         speed = spaker, 
