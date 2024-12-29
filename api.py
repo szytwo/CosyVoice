@@ -566,7 +566,8 @@ async def zero_shot(
     text:str = Form(..., description="输入合成文本"), 
     prompt_text:str = Form(..., description="请输入prompt文本，需与prompt音频内容一致，暂时不支持自动识别"), 
     prompt_wav:UploadFile = File(..., description="选择prompt音频文件，注意采样率不低于16khz"), 
-    spaker:float = Form(1.0, description="语速调节(0.5-2.0)")
+    spaker:float = Form(1.0, description="语速调节(0.5-2.0)"),
+    language:str = Form("", description="输入目标语言")
 ):
     """
     用户自定义音色语音合成接口。
