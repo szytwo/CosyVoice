@@ -103,12 +103,14 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
 
+    add_lang_tag = False #是否添加语言标签
     # 获取需要的模型
     if mode_checkbox_group == '预训练音色':
         cosyvoice = model_manager.get_model("cosyvoice_sft")
     elif mode_checkbox_group in ['跨语种复刻', '语音复刻']: #'3s极速复刻',
         cosyvoice = model_manager.get_model("cosyvoice")
     elif mode_checkbox_group == '3s极速复刻':
+        add_lang_tag = True
         # cosyvoice = model_manager.get_model("cosyvoice-25hz")
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
         # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
@@ -188,7 +190,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
 
     try:   
         # 确保文本以适当的句号结尾
-        tts_text = TextProcessor.ensure_sentence_ends_with_period(tts_text, True)
+        tts_text = TextProcessor.ensure_sentence_ends_with_period(tts_text, add_lang_tag)
         prompt_text = TextProcessor.ensure_sentence_ends_with_period(prompt_text)
         instruct_text = TextProcessor.ensure_sentence_ends_with_period(instruct_text)
 
