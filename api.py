@@ -116,7 +116,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
         # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     elif mode_checkbox_group == '自然语言控制2':
-        cosyvoice = model_manager.get_model("cosyvoice-25hz")
+        cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     else:
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
 
