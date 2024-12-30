@@ -591,6 +591,7 @@ async def zero_shot(
     if language:
         mode_checkbox_group = '自然语言控制2'
         instruct_text = f'用{language}说这句话'
+        prompt_text = ''
     else:
         mode_checkbox_group = '3s极速复刻'
         instruct_text = ''
