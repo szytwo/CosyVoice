@@ -107,9 +107,8 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
                    seed, stream, speed, source_wav):
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
-    # 在同时使用不同模型需要清除 mel_basis 和 hann_window
+    # 在同时使用不同模型需要清除 mel_basis
     MatchaTTSUtilsAudio.mel_basis = {}
-    MatchaTTSUtilsAudio.hann_window = {}
 
     add_lang_tag = False #是否添加语言标签
     # 获取需要的模型
