@@ -587,10 +587,10 @@ async def zero_shot(
     seed = seed_data["value"]
 
     language = language.strip()
+    logging.info(f"language: {language}")
     if language:
         mode_checkbox_group = '自然语言控制2'
         instruct_text = f'用{language}说这句话'
-
     else:
         mode_checkbox_group = '3s极速复刻'
         instruct_text = ''
