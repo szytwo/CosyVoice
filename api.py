@@ -22,8 +22,12 @@ import random
 import librosa
 import uvicorn
 import gc
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('{}/third_party/Matcha-TTS'.format(ROOT_DIR))
+
+import matcha.utils.audio as MatchaTTSUtilsAudio
+
 from cosyvoice.utils.common import set_all_random_seed
 from custom.file_utils import load_wav, logging, delete_old_files_and_folders
 from custom.ModelManager import ModelManager
@@ -103,6 +107,9 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
                    seed, stream, speed, source_wav):
     logging.info(f'prompt_wav: {prompt_wav}')
     logging.info(f'source_wav: {source_wav}')
+    # 在同时使用不同模型需要清除 mel_basis 和 hann_window
+    MatchaTTSUtilsAudio.mel_basis = {}
+    MatchaTTSUtilsAudio.hann_window = {}
 
     add_lang_tag = False #是否添加语言标签
     # 获取需要的模型
@@ -114,7 +121,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         add_lang_tag = True
         # cosyvoice = model_manager.get_model("cosyvoice-25hz")
         cosyvoice = model_manager.get_model("cosyvoice_instruct")
-        #cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+        # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     elif mode_checkbox_group == '自然语言控制2':
         cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
     else:
