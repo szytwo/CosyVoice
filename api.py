@@ -457,12 +457,16 @@ async def seed_vc(
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
-                                volume_multiplier = 1.5, 
-                                nonsilent = True
+                                volume_multiplier = 1.2,
+                                nonsilent = False,
+                                reduce_noise_enabled = False
                             )
         source_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = source_wav, 
-                                prefix = "s"
+                                prefix = "s",
+                                volume_multiplier = 1.2,
+                                nonsilent = False,
+                                reduce_noise_enabled = False
                             )
     except Exception as e:
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
@@ -507,8 +511,9 @@ async def fast_copy(
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
-                                volume_multiplier = 1.5, 
-                                nonsilent = True
+                                volume_multiplier = 1.2,
+                                nonsilent = False,
+                                reduce_noise_enabled = False
                             )
     except Exception as e:
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
@@ -582,9 +587,9 @@ async def zero_shot(
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
-                                volume_multiplier = 1.5, 
-                                nonsilent = True,
-                                reduce_noise_enabled = True
+                                volume_multiplier = 1.2,
+                                nonsilent = False,
+                                reduce_noise_enabled = False
                             )
     except Exception as e:
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
