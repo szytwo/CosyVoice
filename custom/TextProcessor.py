@@ -16,7 +16,9 @@ class TextProcessor:
         :return: 返回检测到的语言代码（如 'en', 'zh-cn'）
         """
         try:
-            lang = detect(text)
+            lang = None
+            if not text:
+                lang = detect(text)
             logging.info(f'Detected language: {lang}')
             return lang
         except Exception as e:
