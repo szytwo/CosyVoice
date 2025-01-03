@@ -17,7 +17,7 @@ class TextProcessor:
         """
         try:
             lang = None
-            if not text:
+            if text:
                 lang = detect(text)
             logging.info(f'Detected language: {lang}')
             return lang
@@ -78,5 +78,6 @@ class TextProcessor:
             log_file.write(f"错误信息: {str(exception)}\n")
             log_file.write("堆栈信息:\n")
             log_file.write(error_traceback + '\n')
-        
-        logging.info(f"错误信息已保存至: {log_file_path}")
+
+        logging.error(f"错误信息: {str(exception)}\n"
+                      f"详细信息已保存至: {log_file_path}")
