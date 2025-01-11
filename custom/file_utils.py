@@ -64,6 +64,9 @@ def load_wav(wav, target_sr):
         speech = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)(speech)
     return speech
 
+def get_full_path(path):
+    return os.path.abspath(path) if not os.path.isabs(path) else path
+
 def delete_old_files_and_folders(folder_path, days):
     """
     使用 shutil 删除指定文件夹中一定天数前的文件和文件夹。

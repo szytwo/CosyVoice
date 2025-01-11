@@ -33,6 +33,7 @@ from custom.file_utils import load_wav, logging, delete_old_files_and_folders
 from custom.ModelManager import ModelManager
 from custom.AudioProcessor import AudioProcessor
 from custom.TextProcessor import TextProcessor
+from custom.AsrProcessor import AsrProcessor
 from fastapi import FastAPI, File, UploadFile, Query, Form
 from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -188,7 +189,11 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
             logging.info('您正在使用预训练音色模式，prompt文本/prompt音频/instruct文本会被忽略！')
     # zero_shot mode only use prompt_wav prompt text
     if mode_checkbox_group in ['3s极速复刻']:
-        if prompt_text == '':
+        if not prompt_text:
+            asr_processor = AsrProcessor()
+            prompt_text = asr_processor.asr_to_text(prompt_wav)
+
+        if not prompt_text:
             errcode = 8
             errmsg = 'prompt文本为空，您是否忘记输入prompt文本？'
             return errcode, errmsg, (target_sr, default_data)
