@@ -1,6 +1,5 @@
 import os
 import requests
-from pathlib import Path
 from custom.file_utils import logging, get_full_path
 from custom.TextProcessor import TextProcessor
 
