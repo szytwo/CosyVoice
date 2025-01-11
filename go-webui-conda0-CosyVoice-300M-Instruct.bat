@@ -16,6 +16,7 @@ IF ERRORLEVEL 1 (
 
 REM 设置 GPU 环境变量，选择显卡
 set CUDA_VISIBLE_DEVICES=0
+set ASR_URL=http://127.0.0.1:7868/api/v1/asr
 
 REM 执行 Python 脚本
 python webui.py --model_dir pretrained_models/CosyVoice-300M-Instruct
