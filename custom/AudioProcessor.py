@@ -4,6 +4,7 @@ import numpy as np
 import librosa
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
+from pydub.effects import normalize
 from noisereduce import reduce_noise
 from fastapi import UploadFile
 from custom.file_utils import logging
@@ -54,15 +55,12 @@ class AudioProcessor:
         logging.info(f"volume_multiplier: {volume_multiplier}")
         if volume_multiplier <= 0:
             raise ValueError("volume_multiplier 必须大于 0")
-
         # 计算增益（分贝），根据倍数调整
         gain_in_db = 20 * np.log10(volume_multiplier)
-
         # 应用增益调整音量
         audio = audio.apply_gain(gain_in_db)
-
-        # 确保音频不削波（归一化到峰值 -0.1 dB 以下）
-        audio = audio.normalize(headroom=0.1)
+        # 归一化到峰值以下
+        audio = normalize(audio)
 
         return audio
 
@@ -113,6 +111,9 @@ class AudioProcessor:
         if volume_multiplier != 1.0:
             # 安全地增加音量
             audio_segment = self.volume_safely(audio_segment, volume_multiplier)
+        else:
+            # 归一化到峰值以下
+            audio_segment = normalize(audio_segment)
         # 指定保存文件的路径
         filename = f"{str(uuid.uuid4())}.wav"
         wav_path = os.path.join(self.output_dir, filename)
