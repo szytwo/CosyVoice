@@ -469,7 +469,7 @@ async def seed_vc(
         source_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = source_wav, 
                                 prefix = "s",
-                                volume_multiplier = 1.2,
+                                volume_multiplier = 1.0,
                                 nonsilent = False,
                                 reduce_noise_enabled = False
                             )
@@ -516,7 +516,7 @@ async def fast_copy(
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
-                                volume_multiplier = 1.2,
+                                volume_multiplier = 1.0,
                                 nonsilent = False,
                                 reduce_noise_enabled = False
                             )
@@ -592,7 +592,7 @@ async def zero_shot(
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = prompt_wav, 
                                 prefix = "p", 
-                                volume_multiplier = 1.2,
+                                volume_multiplier = 1.0,
                                 nonsilent = False,
                                 reduce_noise_enabled = False
                             )
