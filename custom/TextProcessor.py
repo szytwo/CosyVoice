@@ -1,15 +1,19 @@
-import os
 import datetime
-import traceback
-from langdetect import detect
-from custom.file_utils import logging
-import re
-
 import json
+import os
+import re
+import traceback
+
+from langdetect import detect
+
+from custom.file_utils import logging
+
+
 class TextProcessor:
     """
     文本处理工具类，提供多种文本相关功能。
     """
+
     @staticmethod
     def detect_language(text):
         """
@@ -26,9 +30,9 @@ class TextProcessor:
         except Exception as e:
             logging.error(f"Language detection failed: {e}")
             return None
-    
+
     @staticmethod
-    def ensure_sentence_ends_with_period(text, add_lang_tag:bool = False):
+    def ensure_sentence_ends_with_period(text, add_lang_tag: bool = False):
         """
         确保输入文本以适当的句号结尾。
         :param text: 输入文本
@@ -36,7 +40,7 @@ class TextProcessor:
         :return: 修改后的文本
         """
         if not text.strip():
-            return text  # 空文本直接返回
+            return text, None  # 空文本直接返回
         # 根据文本内容添加适当的句号
         lang = TextProcessor.detect_language(text)
         lang_tag = ''
@@ -51,12 +55,12 @@ class TextProcessor:
                 lang_tag = '<|ko|>'
         # 判断是否已经以句号结尾
         if text[-1] in ['.', '。', '！', '!', '？', '?']:
-            return f'{lang_tag}{text}'
+            return f'{lang_tag}{text}', lang
         # 根据文本内容添加适当的句号
-        if lang == 'zh-cn': # 中文文本
-            return f'{lang_tag}{text}。'
+        if lang == 'zh-cn':  # 中文文本
+            return f'{lang_tag}{text}。', lang
         else:  # 英文或其他
-            return f'{lang_tag}{text}.'
+            return f'{lang_tag}{text}.', lang
 
     @staticmethod
     def log_error(exception: Exception, log_dir='error'):
@@ -101,13 +105,16 @@ class TextProcessor:
         :return: 处理后的文本
         """
 
+        text = text.replace("\n", "")
+        text = TextProcessor.replace_blank(text)
+        text = TextProcessor.replace_corner_mark(text)
         logging.info(f'keywords: {keywords}')
         logging.info(f'original text: {text}')
 
         # 常见引号标点符号
-        punctuation = r'[（）【】《》“”‘’]'
+        punctuation = r'[\[\]（）【】《》““””‘’]'
         # 分割文本为方括号内外的部分
-        split_pattern = r'(\[.*?\])'  # 非贪婪匹配方括号内的内容
+        split_pattern = r'(“.*?”)'  # 非贪婪匹配方括号内的内容
         # 按关键词长度从长到短排序
         keywords = sorted(keywords, key=len, reverse=True)
 
@@ -119,7 +126,7 @@ class TextProcessor:
                     if i % 2 == 0:
                         current_part = parts[i]
                         # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
-                        pattern = rf'(?<!\[)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!\])'
+                        pattern = rf'(?<!“)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!”)'
                         # 使用正则表达式替换
                         current_part = re.sub(pattern, f'[{word}]', current_part, flags=re.IGNORECASE)
                         parts[i] = current_part
@@ -129,3 +136,23 @@ class TextProcessor:
         logging.info(f'out text: {text}')
 
         return text
+
+    # replace special symbol
+    @staticmethod
+    def replace_corner_mark(text):
+        text = text.replace('²', '平方')
+        text = text.replace('³', '立方')
+        return text
+
+    # remove blank between chinese character
+    @staticmethod
+    def replace_blank(text: str):
+        out_str = []
+        for i, c in enumerate(text):
+            if c == " ":
+                if ((text[i + 1].isascii() and text[i + 1] != " ") and
+                        (text[i - 1].isascii() and text[i - 1] != " ")):
+                    out_str.append(c)
+            else:
+                out_str.append(c)
+        return "".join(out_str)
