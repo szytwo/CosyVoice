@@ -217,6 +217,10 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     try:   
         # 确保文本以适当的句号结尾
         tts_text = TextProcessor.ensure_sentence_ends_with_period(tts_text, add_lang_tag)
+
+        keywords = TextProcessor.get_keywords()
+        tts_text = TextProcessor.add_brackets(tts_text, keywords, min_length=2)
+
         prompt_text = TextProcessor.ensure_sentence_ends_with_period(prompt_text)
         instruct_text = TextProcessor.ensure_sentence_ends_with_period(instruct_text)
 

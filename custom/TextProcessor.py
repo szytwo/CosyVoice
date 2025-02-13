@@ -3,7 +3,9 @@ import datetime
 import traceback
 from langdetect import detect
 from custom.file_utils import logging
+import re
 
+import json
 class TextProcessor:
     """
     文本处理工具类，提供多种文本相关功能。
@@ -81,3 +83,36 @@ class TextProcessor:
 
         logging.error(f"错误信息: {str(exception)}\n"
                       f"详细信息已保存至: {log_file_path}")
+
+    @staticmethod
+    def get_keywords(config_file='.\custom\keywords.json'):
+        with open(config_file, 'r', encoding='utf-8') as file:
+            words_list = json.load(file)
+        return words_list
+
+    @staticmethod
+    def add_brackets(text, keywords, min_length=2):
+        """
+        在文本中为指定的词语添加方括号，跳过长度小于 min_length 的词语。
+
+        :param text: 输入文本
+        :param keywords: 需要添加括号的词语列表
+        :param min_length: 跳过添加括号的最小词语长度，默认为 2
+        :return: 处理后的文本
+        """
+
+        logging.info(f'keywords: {keywords}')
+        logging.info(f'original text: {text}')
+
+        # 定义常见标点符号
+        punctuation = r'[，。！？；：、（）【】《》“”‘’]'
+
+        for word in keywords:
+            if len(word) >= min_length:
+                # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
+                pattern = rf'(?<!\[)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!\])'
+                text = re.sub(pattern, f'[{word}]', text)
+
+        logging.info(f'out text: {text}')
+
+        return text
