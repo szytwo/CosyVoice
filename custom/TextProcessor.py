@@ -104,14 +104,27 @@ class TextProcessor:
         logging.info(f'keywords: {keywords}')
         logging.info(f'original text: {text}')
 
-        # 定义常见标点符号
-        punctuation = r'[，。！？；：、（）【】《》“”‘’]'
+        # 常见引号标点符号
+        punctuation = r'[（）【】《》“”‘’]'
+        # 分割文本为方括号内外的部分
+        split_pattern = r'(\[.*?\])'  # 非贪婪匹配方括号内的内容
+        # 按关键词长度从长到短排序
+        keywords = sorted(keywords, key=len, reverse=True)
 
         for word in keywords:
             if len(word) >= min_length:
-                # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
-                pattern = rf'(?<!\[)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!\])'
-                text = re.sub(pattern, f'[{word}]', text)
+                parts = re.split(split_pattern, text)
+                for i in range(len(parts)):
+                    # 处理方括号外的部分（偶数索引）
+                    if i % 2 == 0:
+                        current_part = parts[i]
+                        # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
+                        pattern = rf'(?<!\[)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!\])'
+                        # 使用正则表达式替换
+                        current_part = re.sub(pattern, f'[{word}]', current_part, flags=re.IGNORECASE)
+                        parts[i] = current_part
+                # 合并所有部分
+                text = ''.join(parts)
 
         logging.info(f'out text: {text}')
 
