@@ -128,7 +128,7 @@ class TextProcessor:
                         # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
                         pattern = rf'(?<!“)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!”)'
                         # 使用正则表达式替换
-                        current_part = re.sub(pattern, f'[{word}]', current_part, flags=re.IGNORECASE)
+                        current_part = re.sub(pattern, f'“{word}”', current_part, flags=re.IGNORECASE)
                         parts[i] = current_part
                 # 合并所有部分
                 text = ''.join(parts)
