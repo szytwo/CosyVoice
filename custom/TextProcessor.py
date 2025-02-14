@@ -95,9 +95,9 @@ class TextProcessor:
         return words_list
 
     @staticmethod
-    def add_brackets(text, keywords, min_length=2):
+    def add_quotation_mark(text, keywords, min_length=2):
         """
-        在文本中为指定的词语添加方括号，跳过长度小于 min_length 的词语。
+        在文本中为指定的词语添加引号，跳过长度小于 min_length 的词语。
 
         :param text: 输入文本
         :param keywords: 需要添加括号的词语列表
@@ -107,14 +107,15 @@ class TextProcessor:
 
         text = text.replace("\n", "")
         text = TextProcessor.replace_blank(text)
+        text = TextProcessor.replace_bracket(text)
         text = TextProcessor.replace_corner_mark(text)
         logging.info(f'keywords: {keywords}')
         logging.info(f'original text: {text}')
 
         # 常见引号标点符号
         punctuation = r'[\[\]（）【】《》““””‘’]'
-        # 分割文本为方括号内外的部分
-        split_pattern = r'(“.*?”)'  # 非贪婪匹配方括号内的内容
+        # 分割文本为引号内外的部分
+        split_pattern = r'(“.*?”)'  # 非贪婪匹配引号内的内容
         # 按关键词长度从长到短排序
         keywords = sorted(keywords, key=len, reverse=True)
 
@@ -122,10 +123,10 @@ class TextProcessor:
             if len(word) >= min_length:
                 parts = re.split(split_pattern, text)
                 for i in range(len(parts)):
-                    # 处理方括号外的部分（偶数索引）
+                    # 处理引号外的部分（偶数索引）
                     if i % 2 == 0:
                         current_part = parts[i]
-                        # 匹配时确保目标词前后没有标点符号，且没有已有的方括号
+                        # 匹配时确保目标词前后没有标点符号，且没有已有的引号
                         pattern = rf'(?<!“)(?<!{punctuation}){re.escape(word)}(?!{punctuation})(?<!”)'
                         # 使用正则表达式替换
                         current_part = re.sub(pattern, f'“{word}”', current_part, flags=re.IGNORECASE)
@@ -135,6 +136,13 @@ class TextProcessor:
 
         logging.info(f'out text: {text}')
 
+        return text
+
+    # replace meaningless symbol
+    @staticmethod
+    def replace_bracket(text):
+        text = text.replace('（', '“').replace('）', '”')
+        text = text.replace('【', '“').replace('】', '”')
         return text
 
     # replace special symbol
