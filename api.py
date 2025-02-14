@@ -226,7 +226,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
 
         if lang == 'zh-cn':  # 中文文本
             keywords = TextProcessor.get_keywords()
-            tts_text = TextProcessor.add_brackets(tts_text, keywords, min_length=2)
+            tts_text = TextProcessor.add_brackets(tts_text, keywords["keywords"], min_length=2)
 
         prompt_text, lang = TextProcessor.ensure_sentence_ends_with_period(prompt_text)
         instruct_text, lang = TextProcessor.ensure_sentence_ends_with_period(instruct_text)
