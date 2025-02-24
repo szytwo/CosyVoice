@@ -39,5 +39,5 @@ fastapi-cli==0.0.4
 WeTextProcessing==1.0.3
 
 noisereduce
-langdetect
+fasttext-wheel
 func-timeout
