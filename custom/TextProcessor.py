@@ -66,7 +66,7 @@ class TextProcessor:
         if text[-1] in ['.', '。', '！', '!', '？', '?']:
             return f'{lang_tag}{text}', lang
         # 根据文本内容添加适当的句号
-        if lang == 'zh-cn':  # 中文文本
+        if lang == 'zh' or lang == 'ja':  # 中文文本
             return f'{lang_tag}{text}。', lang
         else:  # 英文或其他
             return f'{lang_tag}{text}.', lang
