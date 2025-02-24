@@ -32,7 +32,7 @@ class TextProcessor:
                 predictions = fasttext_model.predict(text, k=1)  # 获取 top-1 语言预测
                 lang = predictions[0][0].replace("__label__", "")  # 解析语言代码
                 confidence = predictions[1][0]  # 置信度
-                return lang if confidence > 0.6 else None
+                lang = lang if confidence > 0.6 else None
 
             logging.info(f'Detected language: {lang}')
             return lang
