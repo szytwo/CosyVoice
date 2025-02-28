@@ -541,6 +541,9 @@ async def fast_copy(
     """
     用户自定义音色语音合成接口。
     """
+    text = TextProcessor.clear_text(text)
+    prompt_text = TextProcessor.clear_text(prompt_text)
+
     try:
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
             upload_file=prompt_wav,
@@ -618,6 +621,9 @@ async def zero_shot(
     """
     用户自定义音色语音合成接口。
     """
+    text = TextProcessor.clear_text(text)
+    prompt_text = TextProcessor.clear_text(prompt_text)
+
     try:
         prompt_wav_upload = await audio_processor.save_upload_to_wav(
             upload_file=prompt_wav,
@@ -675,6 +681,7 @@ async def tts(
     使用预训练音色模型的语音合成接口。
     """
     ############################## generate ##############################
+    text = TextProcessor.clear_text(text)
     seed_data = generate_seed()
     seed = seed_data["value"]
 

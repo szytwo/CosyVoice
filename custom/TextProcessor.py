@@ -15,6 +15,19 @@ class TextProcessor:
     """
 
     @staticmethod
+    def clear_text(text):
+        text = text.replace("\n", "")
+        text = TextProcessor.replace_corner_mark(text)
+        return text
+
+    # replace special symbol
+    @staticmethod
+    def replace_corner_mark(text):
+        text = text.replace('²', '平方')
+        text = text.replace('³', '立方')
+        return text
+
+    @staticmethod
     def detect_language(text):
         """
         检测输入文本的语言。
