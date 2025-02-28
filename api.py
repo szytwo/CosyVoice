@@ -110,6 +110,7 @@ def clear_cuda_cache():
         logging.info(f"[GPU Memory] Max Reserved: {torch.cuda.max_memory_reserved() / (1024 ** 2):.2f} MB")
 
 
+# noinspection PyTypeChecker
 def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, prompt_wav, instruct_text,
                    seed, stream, speed, source_wav):
     logging.info(f'prompt_wav: {prompt_wav}')
@@ -362,6 +363,7 @@ def gradio_generate_audio(tts_text, mode_checkbox_group, sft_dropdown,
         )
 
 
+# noinspection PyTypeChecker
 def main():
     with gr.Blocks() as demo:
         gr.Markdown("### 代码库 [CosyVoice](https://github.com/FunAudioLLM/CosyVoice) \
@@ -431,6 +433,7 @@ def main():
 
 
 app = FastAPI(docs_url=None)
+# noinspection PyTypeChecker
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # 设置允许的origins来源
