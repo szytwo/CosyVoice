@@ -67,7 +67,7 @@ class TextProcessor:
         lang = TextProcessor.detect_language(text)
         lang_tag = ''
         if add_lang_tag:
-            if lang == 'zh':  # 中文文本
+            if lang == 'zh' or lang == 'zh-cn':  # 中文文本
                 lang_tag = '<|zh|>'
             elif lang == 'en':  # 英语
                 lang_tag = '<|en|>'
@@ -79,7 +79,7 @@ class TextProcessor:
         if text[-1] in ['.', '。', '！', '!', '？', '?']:
             return f'{lang_tag}{text}', lang
         # 根据文本内容添加适当的句号
-        if lang == 'zh' or lang == 'ja':  # 中文文本
+        if lang == 'zh' or lang == 'zh-cn' or lang == 'ja':  # 中文文本
             return f'{lang_tag}{text}。', lang
         else:  # 英文或其他
             return f'{lang_tag}{text}.', lang

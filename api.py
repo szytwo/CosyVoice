@@ -225,7 +225,7 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         # 确保文本以适当的句号结尾
         tts_text, lang = TextProcessor.ensure_sentence_ends_with_period(tts_text, add_lang_tag)
 
-        if lang == 'zh-cn':  # 中文文本，添加引号，确保不会断句
+        if lang == 'zh' or lang == 'zh-cn':  # 中文文本，添加引号，确保不会断句
             keywords = TextProcessor.get_keywords()
             tts_text = TextProcessor.add_quotation_mark(tts_text, keywords["keywords"], min_length=2)
 
