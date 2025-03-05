@@ -116,6 +116,7 @@ class TextProcessor:
             words_list = json.load(file)
         return words_list
 
+    # noinspection PyTypeChecker
     @staticmethod
     def add_quotation_mark(text, keywords, min_length=2):
         """
@@ -131,7 +132,6 @@ class TextProcessor:
         text = TextProcessor.replace_blank(text)
         text = TextProcessor.replace_bracket(text)
         text = TextProcessor.replace_corner_mark(text)
-        logging.info(f'keywords: {keywords}')
         logging.info(f'original text: {text}')
 
         # 常见引号标点符号
@@ -167,14 +167,8 @@ class TextProcessor:
         text = text.replace('【', '“').replace('】', '”')
         return text
 
-    # replace special symbol
-    @staticmethod
-    def replace_corner_mark(text):
-        text = text.replace('²', '平方')
-        text = text.replace('³', '立方')
-        return text
-
     # remove blank between chinese character
+    # noinspection PyTypeChecker
     @staticmethod
     def replace_blank(text: str):
         out_str = []
