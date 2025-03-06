@@ -3,6 +3,7 @@ import json
 import os
 import re
 import traceback
+from datetime import datetime
 
 import fasttext
 
@@ -195,6 +196,17 @@ class TextProcessor:
         """将数字年转换为中文读法"""
         logging.info(f'replace chinese year original text: {text}')
 
+        def generate_year_range():
+            """生成当前年及前后一年（共3个年份）"""
+            current = datetime.now().year
+            return {
+                str(current - 1),
+                str(current),
+                str(current + 1)
+            }
+
+        # 生成核心年份集合（用户提供+当前年及前后）
+        keywords = set(keywords) | generate_year_range()  # 自动合并去重
         # 生成年份映射表（仅处理纯数字关键词）
         year_map = {
             year: TextProcessor.number_to_chinese(year)
