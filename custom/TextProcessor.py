@@ -180,3 +180,43 @@ class TextProcessor:
             else:
                 out_str.append(c)
         return "".join(out_str)
+
+    @staticmethod
+    def number_to_chinese(num_str):
+        """将数字字符串转换为中文读法"""
+        chinese_digits = {'0': '零', '1': '一', '2': '二', '3': '三',
+                          '4': '四', '5': '五', '6': '六', '7': '七',
+                          '8': '八', '9': '九'}
+        return ''.join(chinese_digits[c] for c in num_str)
+
+    # noinspection PyTypeChecker
+    @staticmethod
+    def replace_chinese_year(text, keywords):
+        """将数字年转换为中文读法"""
+        # 生成年份映射表（仅处理纯数字关键词）
+        year_map = {
+            year: TextProcessor.number_to_chinese(year)
+            for year in set(keywords)
+            if year.isdigit()  # 过滤确保是数字
+        }
+
+        if year_map:
+            # 按长度倒序排列，避免短数字优先匹配（如同时有202和2025）
+            sorted_years = sorted(year_map.keys(), key=lambda x: -len(x))
+            # 构建正则模式（带边界检查）
+            year_pattern = r'(?<!\d)({})(年|(?=[-,，。！？\s]|$))'.format(
+                "|".join(map(re.escape, sorted_years))  # 转义特殊字符
+            )
+
+            # 单次替换同时处理带"年"和单独出现的情况
+            def replace_year(match):
+                num, suffix = match.groups()
+                return year_map[num] + ("年" if suffix == "年" else "")
+
+            text = re.sub(
+                year_pattern,
+                replace_year,
+                text
+            )
+
+        return text
