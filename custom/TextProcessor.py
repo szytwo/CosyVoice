@@ -132,7 +132,7 @@ class TextProcessor:
         text = TextProcessor.replace_blank(text)
         text = TextProcessor.replace_bracket(text)
         text = TextProcessor.replace_corner_mark(text)
-        logging.info(f'original text: {text}')
+        logging.info(f'add quotation original text: {text}')
 
         # 常见引号标点符号
         punctuation = r'[\[\]（）【】《》““””‘’]'
@@ -156,7 +156,7 @@ class TextProcessor:
                 # 合并所有部分
                 text = ''.join(parts)
 
-        logging.info(f'out text: {text}')
+        logging.info(f'add quotation out text: {text}')
 
         return text
 
@@ -193,6 +193,8 @@ class TextProcessor:
     @staticmethod
     def replace_chinese_year(text, keywords):
         """将数字年转换为中文读法"""
+        logging.info(f'replace chinese year original text: {text}')
+
         # 生成年份映射表（仅处理纯数字关键词）
         year_map = {
             year: TextProcessor.number_to_chinese(year)
@@ -218,5 +220,7 @@ class TextProcessor:
                 replace_year,
                 text
             )
+
+        logging.info(f'replace chinese year out text: {text}')
 
         return text
