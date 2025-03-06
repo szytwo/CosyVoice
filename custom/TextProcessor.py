@@ -206,7 +206,7 @@ class TextProcessor:
             # 按长度倒序排列，避免短数字优先匹配（如同时有202和2025）
             sorted_years = sorted(year_map.keys(), key=lambda x: -len(x))
             # 仅匹配自然语言边界（排除数学符号）
-            year_pattern = r'(?<!\d)({})(年|(?=[,，。！？\s]|$))'.format(
+            year_pattern = r'(?<!\d)({})(年|(?=[,，。！？”’\"\'\s]|$))'.format(
                 "|".join(map(re.escape, sorted_years))
             )
 
