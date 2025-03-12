@@ -219,7 +219,7 @@ class TextProcessor:
             return cn2an.an2cn(input_str)
 
         # 计算符
-        calc_symbols = "%+-/*="
+        calc_symbols = "%+-/*=$|"
         # 逐字符转换的单位
         direct_units = ["年"]
         # 普通数字转换的单位
@@ -235,19 +235,18 @@ class TextProcessor:
         units_pattern = "|".join(direct_units + low_units)  # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
         # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
         pattern = re.compile(
-            rf"\d+(?:{units_pattern})|(?<!\d)\d{{4}}(?![{units_pattern}{re.escape(calc_symbols)}|\d])"
+            rf"\d+(?:{units_pattern})|(?<!\d)\d{{4}}(?![{units_pattern}{re.escape(calc_symbols)}\d])"
         )
-        # 找到所有匹配的部分
-        matches = pattern.findall(text)
-        # 去重
-        unique_matches = list(set(matches))
-        # 替换
-        for match in unique_matches:
-            # 如果匹配的部分包含计算符，则跳过
-            if any(symbol in match for symbol in calc_symbols):
-                continue
-            converted = smart_convert(match)
-            text = text.replace(match, converted)
+
+        def repl_text(m):
+            s = m.group(0)
+            print(s)
+            # 如果包含计算符，则不替换
+            if any(symbol in s for symbol in calc_symbols):
+                return s
+            return smart_convert(s)
+
+        text = pattern.sub(repl_text, text)
 
         logging.info(f'replace chinese number out text: {text}')
 
