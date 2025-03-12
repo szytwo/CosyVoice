@@ -199,6 +199,8 @@ class TextProcessor:
             :param input_str: 输入字符串（如 "2003计划"、"20年"、"2008份"）。
             :return: 转换后的中文读法。
             """
+            if not input_str:
+                return input_str
             # 检查是否有后缀
             for suffix, rule in suffix_rules.items():
                 if input_str.endswith(suffix):
@@ -216,10 +218,13 @@ class TextProcessor:
             # 其他情况按普通数字转换
             return cn2an.an2cn(input_str)
 
+        # 计算符
+        calc_symbols = "%+-/*="
         # 逐字符转换的单位
         direct_units = ["年"]
         # 普通数字转换的单位
-        low_units = ["月", "日", "小时", "分钟", "秒", "个", "人", "次", "份", "元", "美元", "米", "千克", "升"]
+        low_units = ["月", "日", "小时", "分钟", "秒", "个", "人", "次", "份", "元", "美元", "米", "千克", "升", "遍",
+                     "件", "瓶"]
         # 动态生成 suffix_rules
         suffix_rules = {}
         for unit in direct_units:
@@ -227,14 +232,20 @@ class TextProcessor:
         for unit in low_units:
             suffix_rules[unit] = {"mode": "low"}  # 普通数字转换
         # 构建单位正则表达式
-        units_pattern = "|".join(direct_units + low_units)
-        pattern = re.compile(rf"\d+(?:{units_pattern})?|\d{{4}}(?!{units_pattern})")
+        units_pattern = "|".join(direct_units + low_units)  # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
+        # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
+        pattern = re.compile(
+            rf"\d+(?:{units_pattern})|(?<!\d)\d{{4}}(?![{units_pattern}{re.escape(calc_symbols)}|\d])"
+        )
         # 找到所有匹配的部分
         matches = pattern.findall(text)
         # 去重
         unique_matches = list(set(matches))
         # 替换
         for match in unique_matches:
+            # 如果匹配的部分包含计算符，则跳过
+            if any(symbol in match for symbol in calc_symbols):
+                continue
             converted = smart_convert(match)
             text = text.replace(match, converted)
 
