@@ -227,8 +227,8 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
 
         if lang == 'zh' or lang == 'zh-cn':  # 中文文本，添加引号，确保不会断句
             keywords = TextProcessor.get_keywords()
+            tts_text = TextProcessor.replace_chinese_number(tts_text)
             tts_text = TextProcessor.add_quotation_mark(tts_text, keywords["keywords"], min_length=2)
-            tts_text = TextProcessor.replace_chinese_year(tts_text, keywords["year"])
             tts_text = TextProcessor.replace_pronunciation(tts_text, keywords["cacoepy"])
 
         prompt_text, lang = TextProcessor.ensure_sentence_ends_with_period(prompt_text)

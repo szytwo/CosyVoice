@@ -185,46 +185,74 @@ class TextProcessor:
 
     # noinspection PyTypeChecker
     @staticmethod
-    def replace_chinese_year(text, keywords):
-        """将数字年转换为中文读法"""
+    def replace_chinese_number(text):
+        """
+        将文本中的数字和单位替换为中文读法。
+        :param text: 输入文本。
+        :return: 替换后的文本。
+        """
         logging.info(f'replace chinese year original text: {text}')
 
-        def generate_year_range():
-            """生成当前年及前后一年（共3个年份）"""
-            current = datetime.now().year
-            return {
-                str(current - 1),
-                str(current),
-                str(current + 1)
+        def smart_convert(input_str):
+            """
+            根据输入字符串智能转换数字部分。
+            :param input_str: 输入字符串（如 "2003计划"、"20年"、"2008份"）。
+            :return: 转换后的中文读法。
+            """
+            # 支持的后缀及其转换模式
+            suffix_rules = {
+                # 时间单位
+                "年": {"lengths": [4, 4], "mode": "direct"},  # 年份逐字符转换
+                "月": {"mode": "low"},  # 普通数字转换
+                "日": {"mode": "low"},  # 普通数字转换
+                "小时": {"mode": "low"},  # 普通数字转换
+                "分钟": {"mode": "low"},  # 普通数字转换
+                "秒": {"mode": "low"},  # 普通数字转换
+                # 数量单位
+                "个": {"mode": "low"},  # 普通数字转换
+                "人": {"mode": "low"},  # 普通数字转换
+                "次": {"mode": "low"},  # 普通数字转换
+                "份": {"mode": "low"},  # 普通数字转换
+                # 货币单位
+                "元": {"mode": "low"},  # 普通数字转换
+                "美元": {"mode": "low"},  # 普通数字转换
+                # 其他单位
+                "米": {"mode": "low"},  # 普通数字转换
+                "千克": {"mode": "low"},  # 普通数字转换
+                "升": {"mode": "low"},  # 普通数字转换
             }
+            # 检查是否有后缀
+            for suffix, rule in suffix_rules.items():
+                if input_str.endswith(suffix):
+                    num_part = input_str[:-len(suffix)]  # 去掉后缀
+                    if "lengths" in rule and len(num_part) not in rule["lengths"]:
+                        # 如果长度不符合规则，按普通数字转换
+                        chinese_num = cn2an.an2cn(num_part)
+                    else:
+                        # 按规则中的模式转换
+                        chinese_num = cn2an.an2cn(num_part, mode=rule["mode"])
+                    return chinese_num + suffix  # 拼接后缀
+            # 如果没有后缀且是4位数字，按逐字符转换
+            if input_str.isdigit() and len(input_str) == 4:
+                return cn2an.an2cn(input_str, mode="direct")
+            # 其他情况按普通数字转换
+            return cn2an.an2cn(input_str)
 
-        # 生成核心年份集合（用户提供+当前年及前后）
-        keywords = set(keywords) | generate_year_range()  # 自动合并去重
-        # 生成年份映射表（仅处理纯数字关键词）
-        year_map = {
-            year: cn2an.an2cn(year, mode="direct")
-            for year in set(keywords)
-            if year.isdigit()  # 过滤确保是数字
-        }
-
-        if year_map:
-            # 按长度倒序排列，避免短数字优先匹配（如同时有202和2025）
-            sorted_years = sorted(year_map.keys(), key=lambda x: -len(x))
-            # 仅匹配自然语言边界（排除数学符号）
-            year_pattern = r'(?<!\d)({})(年|(?=[,，。！？”’\"\'\s]|$))'.format(
-                "|".join(map(re.escape, sorted_years))
-            )
-
-            # 单次替换同时处理带"年"和单独出现的情况
-            def replace_year(match):
-                num, suffix = match.groups()
-                return year_map[num] + ("年" if suffix == "年" else "")
-
-            text = re.sub(
-                year_pattern,
-                replace_year,
-                text
-            )
+        # 单字符单位
+        single_char_units = "年月日秒个人次份元米升"
+        # 多字符单位
+        multi_char_units = ["小时", "分钟", "美元", "千克"]
+        # 构建正则表达式
+        units_pattern = "|".join(multi_char_units + list(single_char_units))
+        pattern = re.compile(rf"\d+(?:{units_pattern})?|\d{{4}}(?!{units_pattern})")
+        # 找到所有匹配的部分
+        matches = pattern.findall(text)
+        # 去重
+        unique_matches = list(set(matches))
+        # 替换
+        for match in unique_matches:
+            converted = smart_convert(match)
+            text = text.replace(match, converted)
 
         logging.info(f'replace chinese year out text: {text}')
 
