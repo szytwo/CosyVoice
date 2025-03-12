@@ -240,11 +240,16 @@ class TextProcessor:
 
         def repl_text(m):
             s = m.group(0)
-            print(s)
             # 如果包含计算符，则不替换
             if any(symbol in s for symbol in calc_symbols):
                 return s
-            return smart_convert(s)
+
+            try:
+                return smart_convert(s)
+            except Exception as e:
+                TextProcessor.log_error(e)
+                logging.error(f"replace chinese number repl text error：{s}\n{str(e)}")
+                return s
 
         text = pattern.sub(repl_text, text)
 
