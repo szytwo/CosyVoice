@@ -236,3 +236,11 @@ class TextProcessor:
         logging.info(f'replace chinese year out text: {text}')
 
         return text
+
+    @staticmethod
+    def replace_pronunciation(text, keywords):
+        """替换文本中的发音错误字"""
+        for wrong_char, correct_char in keywords.items():
+            text = text.replace(wrong_char, correct_char)
+            
+        return text
