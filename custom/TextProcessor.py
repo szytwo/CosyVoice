@@ -218,8 +218,8 @@ class TextProcessor:
             # 其他情况按普通数字转换
             return cn2an.an2cn(input_str)
 
-        # 计算符
-        calc_symbols = "%+-/*=$|℃"
+        # 排除符号
+        exclude_symbols = "%+-/*=$|℃"
         # 逐字符转换的单位
         direct_units = ["年"]
         # 普通数字转换的单位
@@ -235,13 +235,13 @@ class TextProcessor:
         units_pattern = "|".join(direct_units + low_units)  # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
         # 正则表达式匹配数字部分（包括带单位和不带单位的情况）
         pattern = re.compile(
-            rf"\d+(?:{units_pattern})|(?<!\d)\d{{4}}(?![{units_pattern}{re.escape(calc_symbols)}\d])"
+            rf"\d+(?:{units_pattern})|(?<!\d)\d{{4}}(?![{units_pattern}{re.escape(exclude_symbols)}\d])"
         )
 
         def repl_text(m):
             s = m.group(0)
-            # 如果包含计算符，则不替换
-            if any(symbol in s for symbol in calc_symbols):
+            # 如果包含排除符号，则不替换
+            if any(symbol in s for symbol in exclude_symbols):
                 return s
 
             try:
