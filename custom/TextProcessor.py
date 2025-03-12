@@ -191,7 +191,7 @@ class TextProcessor:
         :param text: 输入文本。
         :return: 替换后的文本。
         """
-        logging.info(f'replace chinese year original text: {text}')
+        logging.info(f'replace chinese number original text: {text}')
 
         def smart_convert(input_str):
             """
@@ -199,28 +199,6 @@ class TextProcessor:
             :param input_str: 输入字符串（如 "2003计划"、"20年"、"2008份"）。
             :return: 转换后的中文读法。
             """
-            # 支持的后缀及其转换模式
-            suffix_rules = {
-                # 时间单位
-                "年": {"lengths": [4, 4], "mode": "direct"},  # 年份逐字符转换
-                "月": {"mode": "low"},  # 普通数字转换
-                "日": {"mode": "low"},  # 普通数字转换
-                "小时": {"mode": "low"},  # 普通数字转换
-                "分钟": {"mode": "low"},  # 普通数字转换
-                "秒": {"mode": "low"},  # 普通数字转换
-                # 数量单位
-                "个": {"mode": "low"},  # 普通数字转换
-                "人": {"mode": "low"},  # 普通数字转换
-                "次": {"mode": "low"},  # 普通数字转换
-                "份": {"mode": "low"},  # 普通数字转换
-                # 货币单位
-                "元": {"mode": "low"},  # 普通数字转换
-                "美元": {"mode": "low"},  # 普通数字转换
-                # 其他单位
-                "米": {"mode": "low"},  # 普通数字转换
-                "千克": {"mode": "low"},  # 普通数字转换
-                "升": {"mode": "low"},  # 普通数字转换
-            }
             # 检查是否有后缀
             for suffix, rule in suffix_rules.items():
                 if input_str.endswith(suffix):
@@ -238,12 +216,18 @@ class TextProcessor:
             # 其他情况按普通数字转换
             return cn2an.an2cn(input_str)
 
-        # 单字符单位
-        single_char_units = "年月日秒个人次份元米升"
-        # 多字符单位
-        multi_char_units = ["小时", "分钟", "美元", "千克"]
-        # 构建正则表达式
-        units_pattern = "|".join(multi_char_units + list(single_char_units))
+        # 逐字符转换的单位
+        direct_units = ["年"]
+        # 普通数字转换的单位
+        low_units = ["月", "日", "小时", "分钟", "秒", "个", "人", "次", "份", "元", "美元", "米", "千克", "升"]
+        # 动态生成 suffix_rules
+        suffix_rules = {}
+        for unit in direct_units:
+            suffix_rules[unit] = {"lengths": [4, 4], "mode": "direct"}  # 逐字符转换
+        for unit in low_units:
+            suffix_rules[unit] = {"mode": "low"}  # 普通数字转换
+        # 构建单位正则表达式
+        units_pattern = "|".join(direct_units + low_units)
         pattern = re.compile(rf"\d+(?:{units_pattern})?|\d{{4}}(?!{units_pattern})")
         # 找到所有匹配的部分
         matches = pattern.findall(text)
@@ -254,7 +238,7 @@ class TextProcessor:
             converted = smart_convert(match)
             text = text.replace(match, converted)
 
-        logging.info(f'replace chinese year out text: {text}')
+        logging.info(f'replace chinese number out text: {text}')
 
         return text
 
