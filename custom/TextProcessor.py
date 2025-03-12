@@ -219,7 +219,7 @@ class TextProcessor:
             return cn2an.an2cn(input_str)
 
         # 计算符
-        calc_symbols = "%+-/*=$|"
+        calc_symbols = "%+-/*=$|℃"
         # 逐字符转换的单位
         direct_units = ["年"]
         # 普通数字转换的单位
