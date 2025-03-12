@@ -5,6 +5,7 @@ import re
 import traceback
 from datetime import datetime
 
+import cn2an
 import fasttext
 
 from custom.file_utils import logging
@@ -182,14 +183,6 @@ class TextProcessor:
                 out_str.append(c)
         return "".join(out_str)
 
-    @staticmethod
-    def number_to_chinese(num_str):
-        """将数字字符串转换为中文读法"""
-        chinese_digits = {'0': '零', '1': '一', '2': '二', '3': '三',
-                          '4': '四', '5': '五', '6': '六', '7': '七',
-                          '8': '八', '9': '九'}
-        return ''.join(chinese_digits[c] for c in num_str)
-
     # noinspection PyTypeChecker
     @staticmethod
     def replace_chinese_year(text, keywords):
@@ -209,7 +202,7 @@ class TextProcessor:
         keywords = set(keywords) | generate_year_range()  # 自动合并去重
         # 生成年份映射表（仅处理纯数字关键词）
         year_map = {
-            year: TextProcessor.number_to_chinese(year)
+            year: cn2an.an2cn(year, mode="direct")
             for year in set(keywords)
             if year.isdigit()  # 过滤确保是数字
         }
@@ -242,5 +235,5 @@ class TextProcessor:
         """替换文本中的发音错误字"""
         for wrong_char, correct_char in keywords.items():
             text = text.replace(wrong_char, correct_char)
-            
+
         return text

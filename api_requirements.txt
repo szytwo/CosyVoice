@@ -41,3 +41,4 @@ WeTextProcessing==1.0.3
 noisereduce
 fasttext-wheel
 func-timeout
+cn2an
