@@ -13,15 +13,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import json
-import torchaudio
 import logging
-import time
+import os
 import shutil
+import time
+from logging.handlers import TimedRotatingFileHandler
+
+import torchaudio
 from tqdm import tqdm
 
+# 将 matplotlib 库的日志级别设置为 WARNING
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
+# 设置日志格式
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+# 创建日志目录（如果不存在）
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+
+
+# 自定义按日期命名的文件名生成函数
+def get_dated_log_filename():
+    """生成按日期命名的日志文件名，格式为 YYYYMMDD.log"""
+    return os.path.join(log_dir, time.strftime("%Y%m%d") + ".log")
+
+
+# 自定义 TimedRotatingFileHandler，按日期命名文件
+class DatedFileHandler(TimedRotatingFileHandler):
+    def __init__(self):
+        super().__init__(
+            filename=get_dated_log_filename(),  # 初始文件名
+            when="midnight",  # 每天午夜切割
+            interval=1,  # 间隔 1 天
+            backupCount=7,  # 保留最近 7 天的日志文件
+            encoding="utf-8",  # 设置文件编码
+        )
+
+    def doRollover(self):
+        """重写 doRollover 方法，按日期生成新文件名"""
+        self.baseFilename = get_dated_log_filename()  # 更新文件名
+        super().doRollover()  # 调用父类的 doRollover 方法
+
 
 # 自定义一个 TqdmLoggingHandler
 class TqdmLoggingHandler(logging.Handler):
@@ -32,10 +64,17 @@ class TqdmLoggingHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
+
+# 创建 DatedFileHandler
+file_handler = DatedFileHandler()
+file_handler.setFormatter(formatter)
+# 创建 TqdmLoggingHandler
+tqdm_handler = TqdmLoggingHandler()
+tqdm_handler.setFormatter(formatter)
+
 logging.basicConfig(
-    level = logging.INFO,
-    format = '%(asctime)s %(levelname)s %(message)s',
-    handlers = [TqdmLoggingHandler()]  # 使用自定义 Handler
+    level=logging.INFO,
+    handlers=[file_handler, tqdm_handler]  # 同时使用文件 Handler 和 Tqdm Handler
 )
 
 
@@ -64,8 +103,10 @@ def load_wav(wav, target_sr):
         speech = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)(speech)
     return speech
 
+
 def get_full_path(path):
     return os.path.abspath(path) if not os.path.isabs(path) else path
+
 
 def delete_old_files_and_folders(folder_path, days):
     """
@@ -107,7 +148,7 @@ def delete_old_files_and_folders(folder_path, days):
             logging.error(f"Error deleting file {file_path}: {e}")
 
     logging.info(f"正在检查文件夹过期或空文件夹，并删除（{folder_path}）...")
-   # 检查并删除空文件夹
+    # 检查并删除空文件夹
     for dir_path in tqdm(dirpaths, total=len(dirpaths)):
         try:
             if (os.path.isdir(dir_path)
