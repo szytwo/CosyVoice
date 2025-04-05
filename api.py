@@ -13,13 +13,12 @@
 # limitations under the License.
 import argparse
 import gc
-import os
-import random
-import sys
-
 import gradio as gr
 import librosa
 import numpy as np
+import os
+import random
+import sys
 import torch
 import torchaudio
 import uvicorn
@@ -44,9 +43,8 @@ from func_timeout import func_timeout, FunctionTimedOut
 
 result_input_dir = './results/input'
 result_output_dir = './results/output'
-
 # 全局模型管理器
-model_manager = ModelManager()
+model_manager = ModelManager(False)
 # 初始化处理器
 audio_processor = AudioProcessor(result_input_dir, result_output_dir)
 # 设置允许访问的域名
@@ -371,6 +369,9 @@ def gradio_generate_audio(tts_text, mode_checkbox_group, sft_dropdown,
 
 # noinspection PyTypeChecker
 def main():
+    model_manager.get_model("cosyvoice_sft")
+    sft_spk = model_manager.sft_spk
+
     with gr.Blocks() as demo:
         gr.Markdown("### 代码库 [CosyVoice](https://github.com/FunAudioLLM/CosyVoice) \
                     预训练模型 [CosyVoice-300M](https://www.modelscope.cn/models/iic/CosyVoice-300M) \
@@ -747,8 +748,6 @@ if __name__ == '__main__':
         torch.cuda.set_per_process_memory_fraction(args.cuda_memory)
 
     if args.webui:
-        model_manager.get_model("cosyvoice_sft")
-        sft_spk = model_manager.sft_spk
         main()
     else:
         try:

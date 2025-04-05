@@ -3,7 +3,8 @@ from custom.CosyVoice import CosyVoice, CosyVoice2
 from custom.file_utils import logging
 
 class ModelManager:
-    def __init__(self):
+    def __init__(self, keep_in_memory=True):
+        self.keep_in_memory = keep_in_memory  # 控制模型是否常驻内存
         self.models = {
             "cosyvoice": None,
             "cosyvoice-25hz": None,
@@ -54,10 +55,15 @@ class ModelManager:
         if model_type not in self.models:
             raise ValueError(f"Unsupported model type: {model_type}")
 
-        # 如果模型尚未加载，则加载
-        if self.models[model_type] is None:
-            with self.locks[model_type]:  # 确保线程安全
-                if self.models[model_type] is None:  # 双重检查锁定
-                    self.models[model_type] = self._load_model(model_type)
-        
-        return self.models[model_type]
+        if self.keep_in_memory:
+            # 常驻模式：双重检查锁定，确保线程安全加载并缓存实例
+            if self.models[model_type] is None:
+                with self.locks[model_type]:  # 确保线程安全
+                    if self.models[model_type] is None:  # 双重检查锁定
+                        self.models[model_type] = self._load_model(model_type)
+
+            return self.models[model_type]
+        else:
+            # 非常驻模式：每次加载新实例，但仍需线程安全
+            with self.locks[model_type]:
+                return self._load_model(model_type)
