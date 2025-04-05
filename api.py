@@ -334,6 +334,10 @@ def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, pro
         errmsg = "generate_audio 执行超时"
         audio = None
         logging.error(errmsg)
+        # 删除过期文件
+        delete_old_files_and_folders(result_output_dir, 1)
+        delete_old_files_and_folders(result_input_dir, 1)
+        clear_cuda_cache()
 
     return errcode, errmsg, audio
 
