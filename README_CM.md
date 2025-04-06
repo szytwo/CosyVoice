@@ -7,7 +7,11 @@ conda activate ./venv
 
 conda install -y -c conda-forge pynini==2.1.5
 
-pip install -r ./api_requirements.txt -i https://mirrors.aliyun.com/pypi/simple 
+pip install -r ./api_requirements.txt -i https://mirrors.aliyun.com/pypi/simple
+
+docker build -t CosyVoice:latest .  #构建镜像
+
+docker-compose up -d #后台运行容器
 
 ```
 
