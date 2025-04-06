@@ -2,6 +2,7 @@
 # https://hub.docker.com/r/pytorch/pytorch/tags
 FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
+ARG PYTHONPATH=""
 # 替换软件源为清华镜像
 RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
     sed -i 's|security.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list
@@ -49,7 +50,7 @@ WORKDIR /code
 # 将项目源代码复制到容器中
 COPY . /code
 
-ENV PYTHONPATH="${PYTHONPATH:-}:/code:/code/third_party/Matcha-TTS"
+ENV PYTHONPATH="${PYTHONPATH}:/code:/code/third_party/Matcha-TTS"
 # 升级 pip 并安装 Python 依赖：
 RUN conda install -y -c conda-forge pynini==2.1.5
 
