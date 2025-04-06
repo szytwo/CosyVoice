@@ -23,7 +23,7 @@ RUN apt-get update && \
     libgl1-mesa-glx \
     libglib2.0-0 \
     tzdata \
-    sox libsox-dev \
+    unzip sox libsox-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # RUN gcc --version
@@ -70,8 +70,13 @@ COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
 RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install -r pynini==2.1.5 -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install pynini==2.1.5 -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && cd pretrained_models/CosyVoice-ttsfrd/ \
+    && unzip resource.zip -d . \
+    && pip install ttsfrd_dependency-0.1-py3-none-any.whl \
+    && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl \
+    && cd /code \
     && rm -rf /wheels
 
 # 暴露容器端口
