@@ -56,11 +56,6 @@ WORKDIR /code/wheels/linux
 RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && pip install onnxruntime_gpu-1.18.0-cp310-cp310-manylinux_2_28_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-WORKDIR /code
-
-RUN pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
-    && rm -rf wheels
-
 WORKDIR /code/pretrained_models/CosyVoice-ttsfrd
 
 RUN unzip resource.zip -d . \
@@ -68,6 +63,9 @@ RUN unzip resource.zip -d . \
     && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 WORKDIR /code
+
+RUN pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
+    && rm -rf wheels
 
 # 暴露容器端口
 EXPOSE 22
