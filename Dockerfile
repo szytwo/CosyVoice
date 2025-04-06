@@ -49,7 +49,7 @@ WORKDIR /code
 # 将项目源代码复制到容器中
 COPY . /code
 
-ENV PYTHONPATH="${PYTHONPATH}:/code:/code/third_party/Matcha-TTS"
+ENV PYTHONPATH="${PYTHONPATH:-}:/code:/code/third_party/Matcha-TTS"
 # 升级 pip 并安装 Python 依赖：
 RUN conda install -y -c conda-forge pynini==2.1.5
 
