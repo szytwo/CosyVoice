@@ -63,3 +63,4 @@ pretrained_models/*
 /wheels/
 
 go-api-conda.bat
+go-api-conda01.bat
