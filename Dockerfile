@@ -2,9 +2,6 @@
 # https://hub.docker.com/r/pytorch/pytorch/tags
 FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
-# 设置容器内工作目录为 /workspace
-WORKDIR /workspace
-
 # 替换软件源为清华镜像
 RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
     sed -i 's|security.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list
@@ -53,18 +50,24 @@ COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
 RUN conda install -y -c conda-forge pynini==2.1.5
-RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && cd wheels/linux/ \
-    && pip install onnxruntime_gpu-1.18.0-cp310-cp310-manylinux_2_28_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && cd /code  \
-    && rm -rf wheels
-RUN pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-RUN cd pretrained_models/CosyVoice-ttsfrd/ \
-    && unzip resource.zip -d . \
-    && pip install ttsfrd_dependency-0.1-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && cd /code
 
+WORKDIR /code/wheels/linux
+
+RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install onnxruntime_gpu-1.18.0-cp310-cp310-manylinux_2_28_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+WORKDIR /code
+
+RUN pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
+    && rm -rf wheels
+
+WORKDIR /code/pretrained_models/CosyVoice-ttsfrd
+
+RUN unzip resource.zip -d . \
+    && pip install ttsfrd_dependency-0.1-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+WORKDIR /code
 
 # 暴露容器端口
 EXPOSE 22
