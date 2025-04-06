@@ -56,7 +56,7 @@ pretrained_models/*
 /results/
 /error/
 /venv/
-/example/test/
+/examples/test/
 /third_party/Matcha-TTS/
 
 go-api-conda.bat
