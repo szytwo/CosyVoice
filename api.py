@@ -299,11 +299,6 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
         errmsg = f"音频生成失败，错误信息：{str(e)}"
         logging.error(errmsg)
         return errcode, errmsg, (target_sr, default_data)
-    finally:
-        # 删除过期文件
-        delete_old_files_and_folders(result_output_dir, 1)
-        delete_old_files_and_folders(result_input_dir, 1)
-        clear_cuda_cache()
 
 
 def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, prompt_wav, instruct_text,
@@ -338,6 +333,7 @@ def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, pro
         errmsg = "generate_audio 执行超时"
         audio = None
         logging.error(errmsg)
+    finally:
         # 删除过期文件
         delete_old_files_and_folders(result_output_dir, 1)
         delete_old_files_and_folders(result_input_dir, 1)
