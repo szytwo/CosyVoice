@@ -52,10 +52,11 @@ pretrained_models/*
 *.tar
 *.whl
 
-results/
-error/
-venv/
-example/
-third_party/Matcha-TTS/
+/logs/
+/results/
+/error/
+/venv/
+/example/test/
+/third_party/Matcha-TTS/
 
 go-api-conda.bat
