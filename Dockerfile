@@ -57,7 +57,7 @@ RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && cd wheels/linux/ \
     && pip install onnxruntime_gpu-1.18.0-cp310-cp310-manylinux_2_28_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && cd /code  \
-    && rm -rf /wheels
+    && rm -rf wheels
 RUN pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN cd pretrained_models/CosyVoice-ttsfrd/ \
     && unzip resource.zip -d . \

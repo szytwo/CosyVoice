@@ -19,6 +19,7 @@ import numpy as np
 import os
 import random
 import sys
+import time
 import torch
 import torchaudio
 import uvicorn
@@ -311,6 +312,8 @@ def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, pro
     执行generate_audio，带超时，防止卡死
     """
     try:
+        # 记录开始时间
+        start_time = time.time()
         errcode, errmsg, audio = func_timeout(
             300,  # 超时时间
             generate_audio,
@@ -327,6 +330,9 @@ def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, pro
                 "source_wav": source_wav,
             },
         )
+        # 计算耗时
+        elapsed = time.time() - start_time
+        logging.info(f"生成完成，用时: {elapsed}")
     except FunctionTimedOut:
         errcode = -1
         errmsg = "generate_audio 执行超时"
