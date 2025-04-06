@@ -1,13 +1,11 @@
+import cn2an
 import datetime
 import json
 import os
 import re
 import traceback
-from datetime import datetime
 
-import cn2an
 import fasttext
-
 from custom.file_utils import logging
 
 
@@ -113,7 +111,7 @@ class TextProcessor:
                       f"详细信息已保存至: {log_file_path}")
 
     @staticmethod
-    def get_keywords(config_file='.\custom\keywords.json'):
+    def get_keywords(config_file='./custom/keywords.json'):
         with open(config_file, 'r', encoding='utf-8') as file:
             words_list = json.load(file)
         return words_list

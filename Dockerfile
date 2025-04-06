@@ -32,23 +32,6 @@ RUN apt-get update && \
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone
 
-# 安装 Python 3.10.16 到自定义路径
-# 使用 update-alternatives 设置 Python 3.10.16 为默认 Python 版本
-# https://mirrors.aliyun.com/python-release/
-COPY wheels/linux/Python-3.10.16.tgz .
-
-RUN tar -xzf Python-3.10.16.tgz \
-    && cd Python-3.10.16 \
-    && ./configure --prefix=/usr/local/python3.10.16 --enable-optimizations \
-    && make -j$(nproc) && make altinstall \
-    && cd .. \
-    && rm -rf Python-3.10.16 Python-3.10.16.tgz \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/local/python3.10.16/bin/python3.10 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/python3.10.16/bin/pip3.10 1
-
-# 验证 Python 和 pip 版本
-# RUN python --version && pip --version
-
 # 下载并解压 FFmpeg
 # https://www.johnvansickle.com/ffmpeg
 COPY wheels/linux/ffmpeg-6.0.1-amd64-static.tar.xz .
@@ -69,13 +52,16 @@ WORKDIR /code
 COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
-RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install pynini==2.1.5 -i https://pypi.tuna.tsinghua.edu.cn/simple \
+RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN conda install -y -c conda-forge pynini==2.1.5
+RUN cd wheels/linux/ \
+    && pip install onnxruntime_gpu-1.18.0-cp310-cp310-manylinux_2_28_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && cd /code \
     && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && cd pretrained_models/CosyVoice-ttsfrd/ \
     && unzip resource.zip -d . \
-    && pip install ttsfrd_dependency-0.1-py3-none-any.whl \
-    && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl \
+    && pip install ttsfrd_dependency-0.1-py3-none-any.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install ttsfrd-0.4.2-cp310-cp310-linux_x86_64.whl -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && cd /code \
     && rm -rf /wheels
 

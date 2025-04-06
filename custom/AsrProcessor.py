@@ -1,27 +1,53 @@
 import os
 import requests
-from custom.file_utils import logging, get_full_path
+
 from custom.TextProcessor import TextProcessor
+from custom.file_utils import logging, get_full_path
+
 
 class AsrProcessor:
     def __init__(self):
         """
         初始化ASR音频与文本对齐处理器。
         """
-        asr_url = os.getenv("ASR_URL", "") #asr接口
+        asr_url = os.getenv("ASR_URL", "")  # asr接口
         self.asr_url = asr_url
 
     def send_asr_request(self, audio_path, lang='auto', output_timestamp=False):
-        # 发送 GET 请求
-        params = {'audio_path': audio_path, 'lang': lang, 'output_timestamp': output_timestamp}
-        headers = {'accept': 'application/json'}
+        """
+        通过 POST 上传音频文件到 ASR 服务
 
-        response = requests.get(self.asr_url, params=params, headers=headers)
+        Args:
+            audio_path (str): 本地音频文件路径（如 /path/to/audio.wav）
+            lang (str): 语言代码（默认 'auto' 自动检测）
+            output_timestamp (bool): 是否返回时间戳
 
-        if response.status_code == 200:
-            return response.json()  # 返回 JSON 响应
-        else:
-            logging.error(f"send_asr_request fail: {response.status_code}")
+        Returns:
+            dict: ASR 结果（JSON 格式），失败返回 None
+        """
+        try:
+            with open(audio_path, 'rb') as audio_file:
+                files = [('files', (os.path.basename(audio_path), audio_file, 'audio/wav'))]
+                data = {
+                    'keys': os.path.basename(audio_path),
+                    'lang': lang,
+                    'output_timestamp': str(output_timestamp).lower()
+                }
+
+                response = requests.post(
+                    self.asr_url,
+                    files=files,
+                    data=data,
+                    headers={'accept': 'application/json'}
+                )
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logging.error(f"ASR failed. Status: {response.status_code}, Response: {response.text}")
+                return None
+        except Exception as e:
+            logging.error(f"Error in send_asr_request: {str(e)}")
             return None
 
     def asr_to_text(self, audio_path):
