@@ -55,8 +55,11 @@ pretrained_models/*
 /fasttext/
 /test/
 /logs/
+/logs01/
 /results/
+/results01/
 /error/
+/error01/
 /venv/
 /examples/test/
 /third_party/Matcha-TTS/
