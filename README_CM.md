@@ -9,9 +9,9 @@ conda install -y -c conda-forge pynini==2.1.5
 
 pip install -r ./api_requirements.txt -i https://mirrors.aliyun.com/pypi/simple
 
-docker build -t cosyvoice:latest .  # 构建镜像
-docker load -i cosyvoice.tar # 导入镜像
-docker save -o cosyvoice.tar cosyvoice:latest # 导出镜像
+docker build -t cosyvoice:20250406 .  # 构建镜像
+docker load -i cosyvoice-20250406.tar # 导入镜像
+docker save -o cosyvoice-20250406.tar cosyvoice:20250406 # 导出镜像
 docker-compose up -d # 后台运行容器
 
 ```
