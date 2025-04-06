@@ -132,7 +132,7 @@ class TextProcessor:
         text = TextProcessor.replace_blank(text)
         text = TextProcessor.replace_bracket(text)
         text = TextProcessor.replace_corner_mark(text)
-        logging.info(f'add quotation original text: {text}')
+        # logging.info(f'add quotation original text: {text}')
 
         # 常见引号标点符号
         punctuation = r'[\[\]（）【】《》““””‘’]'
@@ -156,7 +156,7 @@ class TextProcessor:
                 # 合并所有部分
                 text = ''.join(parts)
 
-        logging.info(f'add quotation out text: {text}')
+        # logging.info(f'add quotation out text: {text}')
 
         return text
 
@@ -189,7 +189,8 @@ class TextProcessor:
         :param text: 输入文本。
         :return: 替换后的文本。
         """
-        logging.info(f'replace chinese number original text: {text}')
+
+        # logging.info(f'replace chinese number original text: {text}')
 
         def smart_convert(input_str):
             """
@@ -251,7 +252,7 @@ class TextProcessor:
 
         text = pattern.sub(repl_text, text)
 
-        logging.info(f'replace chinese number out text: {text}')
+        # logging.info(f'replace chinese number out text: {text}')
 
         return text
 
