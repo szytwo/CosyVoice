@@ -8,6 +8,7 @@ RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/source
 
 # 防止交互式安装，完全不交互，使用默认值
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 # 设置时区
 ENV TZ=Asia/Shanghai
 
@@ -48,6 +49,7 @@ WORKDIR /code
 # 将项目源代码复制到容器中
 COPY . /code
 
+ENV PYTHONPATH="${PYTHONPATH}:/code:/code/third_party/Matcha-TTS"
 # 升级 pip 并安装 Python 依赖：
 RUN conda install -y -c conda-forge pynini==2.1.5
 
