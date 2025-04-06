@@ -1,6 +1,6 @@
 # 使用 PyTorch 官方 CUDA 12.1 运行时镜像
 # https://hub.docker.com/r/pytorch/pytorch/tags
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
 # 设置容器内工作目录为 /workspace
 WORKDIR /workspace
@@ -23,6 +23,7 @@ RUN apt-get update && \
     libgl1-mesa-glx \
     libglib2.0-0 \
     tzdata \
+    sox libsox-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # RUN gcc --version
@@ -69,13 +70,14 @@ COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
 RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install -r pynini==2.1.5 -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && rm -rf /wheels
 
 # 暴露容器端口
 EXPOSE 22
 EXPOSE 80
-EXPOSE 7869
+EXPOSE 9987
 
 # 容器启动时执行 api.py
 # CMD ["python", "api.py"]
