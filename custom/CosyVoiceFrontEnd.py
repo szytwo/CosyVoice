@@ -11,28 +11,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from functools import partial
+import inflect
 import json
-import onnxruntime
-import torch
 import numpy as np
-import whisper
-from typing import Callable
-import torchaudio.compliance.kaldi as kaldi
-import torchaudio
+import onnxruntime
 import os
 import re
-import inflect
+import torch
+import torchaudio
+import torchaudio.compliance.kaldi as kaldi
+import whisper
+from functools import partial
+from typing import Callable
+
 try:
     import ttsfrd
+
     use_ttsfrd = True
 except ImportError:
     print("failed to import ttsfrd, use WeTextProcessing instead")
     from tn.chinese.normalizer import Normalizer as ZhNormalizer
     from tn.english.normalizer import Normalizer as EnNormalizer
+
     use_ttsfrd = False
-from cosyvoice.utils.frontend_utils import contains_chinese, replace_blank, replace_corner_mark, remove_bracket, spell_out_number, split_paragraph
+from cosyvoice.utils.frontend_utils import contains_chinese, replace_blank, replace_corner_mark, remove_bracket, \
+    spell_out_number, split_paragraph
 from custom.file_utils import logging
+
 
 class CosyVoiceFrontEnd:
 
@@ -50,10 +55,12 @@ class CosyVoiceFrontEnd:
         option = onnxruntime.SessionOptions()
         option.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
         option.intra_op_num_threads = 1
-        self.campplus_session = onnxruntime.InferenceSession(campplus_model, sess_options=option, providers=["CPUExecutionProvider"])
+        self.campplus_session = onnxruntime.InferenceSession(campplus_model, sess_options=option,
+                                                             providers=["CPUExecutionProvider"])
         self.speech_tokenizer_session = onnxruntime.InferenceSession(speech_tokenizer_model, sess_options=option,
-                                                                     providers=["CUDAExecutionProvider" if torch.cuda.is_available() else
-                                                                                "CPUExecutionProvider"])
+                                                                     providers=[
+                                                                         "CUDAExecutionProvider" if torch.cuda.is_available() else
+                                                                         "CPUExecutionProvider"])
         if os.path.exists(spk2info):
             self.spk2info = torch.load(spk2info, map_location=self.device)
         else:
@@ -65,7 +72,7 @@ class CosyVoiceFrontEnd:
         if self.use_ttsfrd:
             self.frd = ttsfrd.TtsFrontendEngine()
             ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-            assert self.frd.initialize('{}/../../pretrained_models/CosyVoice-ttsfrd/resource'.format(ROOT_DIR)) is True, \
+            assert self.frd.initialize('{}/../pretrained_models/CosyVoice-ttsfrd/resource'.format(ROOT_DIR)) is True, \
                 'failed to initialize ttsfrd resource'
             self.frd.set_lang_type('pinyinvg')
         else:
@@ -84,9 +91,10 @@ class CosyVoiceFrontEnd:
         feat = whisper.log_mel_spectrogram(speech, n_mels=128)
         speech_token = self.speech_tokenizer_session.run(None,
                                                          {self.speech_tokenizer_session.get_inputs()[0].name:
-                                                          feat.detach().cpu().numpy(),
+                                                              feat.detach().cpu().numpy(),
                                                           self.speech_tokenizer_session.get_inputs()[1].name:
-                                                          np.array([feat.shape[2]], dtype=np.int32)})[0].flatten().tolist()
+                                                              np.array([feat.shape[2]], dtype=np.int32)})[
+            0].flatten().tolist()
         speech_token = torch.tensor([speech_token], dtype=torch.int32).to(self.device)
         speech_token_len = torch.tensor([speech_token.shape[1]], dtype=torch.int32).to(self.device)
         return speech_token, speech_token_len
@@ -99,7 +107,8 @@ class CosyVoiceFrontEnd:
                            sample_frequency=16000)
         feat = feat - feat.mean(dim=0, keepdim=True)
         embedding = self.campplus_session.run(None,
-                                              {self.campplus_session.get_inputs()[0].name: feat.unsqueeze(dim=0).cpu().numpy()})[0].flatten().tolist()
+                                              {self.campplus_session.get_inputs()[0].name: feat.unsqueeze(
+                                                  dim=0).cpu().numpy()})[0].flatten().tolist()
         embedding = torch.tensor([embedding]).to(self.device)
         return embedding
 
@@ -127,8 +136,10 @@ class CosyVoiceFrontEnd:
             text = text.replace(" - ", "，")
             text = remove_bracket(text)
             text = re.sub(r'[，,、]+$', '。', text)
-            texts = list(split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "zh", token_max_n=40,
-                                         token_min_n=30, merge_len=10, comma_split=True))
+            texts = list(
+                split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "zh",
+                                token_max_n=40,
+                                token_min_n=30, merge_len=10, comma_split=True))
         else:
             if self.use_ttsfrd:
                 texts = [i["text"] for i in json.loads(self.frd.do_voicegen_frd(text))["sentences"]]
@@ -136,8 +147,10 @@ class CosyVoiceFrontEnd:
             else:
                 text = self.en_tn_model.normalize(text)
             text = spell_out_number(text, self.inflect_parser)
-            texts = list(split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "en", token_max_n=40,
-                                         token_min_n=30, merge_len=10, comma_split=True))
+            texts = list(
+                split_paragraph(text, partial(self.tokenizer.encode, allowed_special=self.allowed_special), "en",
+                                token_max_n=40,
+                                token_min_n=30, merge_len=10, comma_split=True))
         if split is False:
             return text
         return texts
@@ -145,15 +158,17 @@ class CosyVoiceFrontEnd:
     def frontend_sft(self, tts_text, spk_id):
         tts_text_token, tts_text_token_len = self._extract_text_token(tts_text)
         embedding = self.spk2info[spk_id]['embedding']
-        model_input = {'text': tts_text_token, 'text_len': tts_text_token_len, 'llm_embedding': embedding, 'flow_embedding': embedding}
+        model_input = {'text': tts_text_token, 'text_len': tts_text_token_len, 'llm_embedding': embedding,
+                       'flow_embedding': embedding}
         return model_input
 
-    def frontend_zero_shot(self, tts_text, prompt_text, prompt_speech_16k, resample_rate, frontend_input = None):
+    def frontend_zero_shot(self, tts_text, prompt_text, prompt_speech_16k, resample_rate, frontend_input=None):
         tts_text_token, tts_text_token_len = self._extract_text_token(tts_text)
 
         if frontend_input is None:
             prompt_text_token, prompt_text_token_len = self._extract_text_token(prompt_text)
-            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(prompt_speech_16k)
+            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(
+                prompt_speech_16k)
             speech_feat, speech_feat_len = self._extract_speech_feat(prompt_speech_resample)
             speech_token, speech_token_len = self._extract_speech_token(prompt_speech_16k)
             embedding = self._extract_spk_embedding(prompt_speech_16k)
@@ -200,7 +215,8 @@ class CosyVoiceFrontEnd:
 
         if frontend_input is None:
             prompt_text_token, prompt_text_token_len = self._extract_text_token(instruct_text + '<|endofprompt|>')
-            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(prompt_speech_16k)
+            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(
+                prompt_speech_16k)
             speech_feat, speech_feat_len = self._extract_speech_feat(prompt_speech_resample)
             speech_token, speech_token_len = self._extract_speech_token(prompt_speech_16k)
             embedding = self._extract_spk_embedding(prompt_speech_16k)
@@ -224,13 +240,14 @@ class CosyVoiceFrontEnd:
         return model_input
 
     def frontend_vc(self, source_speech_16k, prompt_speech_16k, resample_rate,
-            embedding = None, 
-            prompt_speech_feat_obj = None, 
-            prompt_speech_token_obj = None
-        ):
+                    embedding=None,
+                    prompt_speech_feat_obj=None,
+                    prompt_speech_token_obj=None
+                    ):
         if embedding is None:
             prompt_speech_token, prompt_speech_token_len = self._extract_speech_token(prompt_speech_16k)
-            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(prompt_speech_16k)
+            prompt_speech_resample = torchaudio.transforms.Resample(orig_freq=16000, new_freq=resample_rate)(
+                prompt_speech_16k)
             prompt_speech_feat, prompt_speech_feat_len = self._extract_speech_feat(prompt_speech_resample)
             embedding = self._extract_spk_embedding(prompt_speech_16k)
         else:
@@ -239,7 +256,8 @@ class CosyVoiceFrontEnd:
 
         source_speech_token, source_speech_token_len = self._extract_speech_token(source_speech_16k)
         model_input = {'source_speech_token': source_speech_token, 'source_speech_token_len': source_speech_token_len,
-                       'flow_prompt_speech_token': prompt_speech_token, 'flow_prompt_speech_token_len': prompt_speech_token_len,
+                       'flow_prompt_speech_token': prompt_speech_token,
+                       'flow_prompt_speech_token_len': prompt_speech_token_len,
                        'prompt_speech_feat': prompt_speech_feat, 'prompt_speech_feat_len': prompt_speech_feat_len,
                        'flow_embedding': embedding}
         return model_input
