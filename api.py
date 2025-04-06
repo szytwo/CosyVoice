@@ -45,7 +45,7 @@ from func_timeout import func_timeout, FunctionTimedOut
 result_input_dir = './results/input'
 result_output_dir = './results/output'
 # 全局模型管理器
-model_manager = ModelManager(False)
+model_manager = ModelManager(True)
 # 初始化处理器
 audio_processor = AudioProcessor(result_input_dir, result_output_dir)
 # 设置允许访问的域名
@@ -116,189 +116,189 @@ def generate_audio(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, pro
     logging.info(f'source_wav: {source_wav}')
     # 在同时使用不同模型需要清除 mel_basis
     MatchaTTSUtilsAudio.mel_basis = {}
-
     add_lang_tag = False  # 是否添加语言标签
+    model_type = "cosyvoice_instruct"
     # 获取需要的模型
     if mode_checkbox_group == '预训练音色':
-        cosyvoice = model_manager.get_model("cosyvoice_sft")
+        model_type = "cosyvoice_sft"
     elif mode_checkbox_group in ['跨语种复刻', '语音复刻']:  # '3s极速复刻',
-        cosyvoice = model_manager.get_model("cosyvoice")
+        model_type = "cosyvoice"
     elif mode_checkbox_group == '3s极速复刻':
         add_lang_tag = True
-        # cosyvoice = model_manager.get_model("cosyvoice-25hz")
-        cosyvoice = model_manager.get_model("cosyvoice_instruct")
-        # cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
+        model_type = "cosyvoice_instruct"
+        # model_type = "cosyvoice-25hz"
+        # model_type = "cosyvoice2-0.5b"
     elif mode_checkbox_group == '自然语言控制2':
-        cosyvoice = model_manager.get_model("cosyvoice2-0.5b")
-    else:
-        cosyvoice = model_manager.get_model("cosyvoice_instruct")
+        model_type = "cosyvoice2-0.5b"
 
-    target_sr = cosyvoice.sample_rate
-    default_data = np.zeros(target_sr)
+    with model_manager.use_model(model_type) as cosyvoice:
+        target_sr = cosyvoice.sample_rate
+        default_data = np.zeros(target_sr)
 
-    # if instruct mode, please make sure that model is iic/CosyVoice-300M-Instruct and not cross_lingual mode
-    if mode_checkbox_group in ['自然语言控制']:
-        if cosyvoice.frontend.instruct is False:
-            errcode = 1
-            errmsg = '您正在使用自然语言控制模式, 请使用iic/CosyVoice-300M-Instruct模型'
+        # if instruct mode, please make sure that model is iic/CosyVoice-300M-Instruct and not cross_lingual mode
+        if mode_checkbox_group in ['自然语言控制']:
+            if cosyvoice.frontend.instruct is False:
+                errcode = 1
+                errmsg = '您正在使用自然语言控制模式, 请使用iic/CosyVoice-300M-Instruct模型'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if instruct_text == '':
+                errcode = 2
+                errmsg = '您正在使用自然语言控制模式, 请输入instruct文本'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if prompt_wav is not None or prompt_text != '':
+                logging.info('您正在使用自然语言控制模式, prompt音频/prompt文本会被忽略')
+
+        if mode_checkbox_group in ['自然语言控制2']:
+            if prompt_wav is None:
+                errcode = 6
+                errmsg = 'prompt音频为空，您是否忘记输入prompt音频？'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if instruct_text == '':
+                errcode = 2
+                errmsg = '您正在使用自然语言控制模式, 请输入instruct文本'
+                return errcode, errmsg, (target_sr, default_data)
+
+        # if cross_lingual mode, please make sure that model is iic/CosyVoice-300M and tts_text prompt_text are different language
+        if mode_checkbox_group in ['跨语种复刻']:
+            if cosyvoice.frontend.instruct is True:
+                errcode = 3
+                errmsg = '您正在使用跨语种复刻模式, 请使用iic/CosyVoice-300M模型'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if instruct_text != '':
+                logging.info('您正在使用跨语种复刻模式, instruct文本会被忽略')
+
+            if prompt_wav is None:
+                errcode = 5
+                errmsg = '您正在使用跨语种复刻模式, 请提供prompt音频'
+                return errcode, errmsg, (target_sr, default_data)
+
+            logging.info('您正在使用跨语种复刻模式, 请确保合成文本和prompt文本为不同语言')
+        # if in zero_shot cross_lingual, please make sure that prompt_text and prompt_wav meets requirements
+        if mode_checkbox_group in ['3s极速复刻', '跨语种复刻', '语音复刻']:
+            if prompt_wav is None:
+                errcode = 6
+                errmsg = 'prompt音频为空，您是否忘记输入prompt音频？'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if torchaudio.info(prompt_wav).sample_rate < prompt_sr:
+                errcode = 7
+                errmsg = 'prompt音频采样率{}低于{}'.format(torchaudio.info(prompt_wav).sample_rate, prompt_sr)
+                return errcode, errmsg, (target_sr, default_data)
+        # sft mode only use sft_dropdown
+        if mode_checkbox_group in ['预训练音色']:
+            if instruct_text != '' or prompt_wav is not None or prompt_text != '':
+                logging.info('您正在使用预训练音色模式，prompt文本/prompt音频/instruct文本会被忽略！')
+        # zero_shot mode only use prompt_wav prompt text
+        if mode_checkbox_group in ['3s极速复刻']:
+            if not prompt_text:
+                asr_processor = AsrProcessor()
+                prompt_text = asr_processor.asr_to_text(prompt_wav)
+
+            if not prompt_text:
+                errcode = 8
+                errmsg = 'prompt文本为空，您是否忘记输入prompt文本？'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if instruct_text != '':
+                logging.info('您正在使用3s极速复刻模式，预训练音色/instruct文本会被忽略！')
+
+        if mode_checkbox_group in ['语音复刻']:
+            if source_wav is None:
+                errcode = 6
+                errmsg = 'source音频为空，您是否忘记输入prompt音频？'
+                return errcode, errmsg, (target_sr, default_data)
+
+            if torchaudio.info(source_wav).sample_rate < prompt_sr:
+                errcode = 7
+                errmsg = 'source音频采样率{}低于{}'.format(torchaudio.info(source_wav).sample_rate, prompt_sr)
+                return errcode, errmsg, (target_sr, default_data)
+
+        generated_audio_list = []  # 用于存储生成的音频片段
+
+        try:
+            # 确保文本以适当的句号结尾
+            tts_text, lang = TextProcessor.ensure_sentence_ends_with_period(tts_text, add_lang_tag)
+
+            if lang == 'zh' or lang == 'zh-cn':  # 中文文本，添加引号，确保不会断句
+                keywords = TextProcessor.get_keywords()
+                tts_text = TextProcessor.replace_chinese_number(tts_text)
+                tts_text = TextProcessor.add_quotation_mark(tts_text, keywords["keywords"], min_length=2)
+                tts_text = TextProcessor.replace_pronunciation(tts_text, keywords["cacoepy"])
+
+            prompt_text, lang = TextProcessor.ensure_sentence_ends_with_period(prompt_text)
+            instruct_text, lang = TextProcessor.ensure_sentence_ends_with_period(instruct_text)
+
+            if mode_checkbox_group == '预训练音色':
+                logging.info('get sft inference request')
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_sft(tts_text, sft_dropdown, stream=stream, speed=speed):
+                    generated_audio_list.append(i['tts_speech'].numpy().flatten())
+            elif mode_checkbox_group == '3s极速复刻':
+                logging.info('get zero_shot inference request')
+                logging.info(f'prompt_text: {prompt_text}')
+                prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=stream,
+                                                       speed=speed):
+                    # 获取生成的音频片段
+                    generated_audio = i['tts_speech'].numpy().flatten()
+                    # 去除音频开头的静音部分
+                    generated_audio = AudioProcessor.remove_silence(generated_audio, target_sr)
+                    # 将处理后的音频片段添加到列表
+                    generated_audio_list.append(generated_audio)
+            elif mode_checkbox_group == '跨语种复刻':
+                logging.info('get cross_lingual inference request')
+                prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_cross_lingual(tts_text, prompt_speech_16k, stream=stream, speed=speed):
+                    generated_audio_list.append(i['tts_speech'].numpy().flatten())
+            elif mode_checkbox_group == '语音复刻':
+                logging.info('get vc long inference request')
+                prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+                source_speech_16k = postprocess(load_wav(source_wav, prompt_sr), target_sr)
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_vc_long(source_speech_16k, prompt_speech_16k, stream=stream, speed=speed):
+                    generated_audio_list.append(i)
+            elif mode_checkbox_group == '自然语言控制2':
+                logging.info('get instruct2 inference request')
+                prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=stream,
+                                                       speed=speed):
+                    # 获取生成的音频片段
+                    generated_audio = i['tts_speech'].numpy().flatten()
+                    # 去除音频开头的静音部分
+                    generated_audio = AudioProcessor.remove_silence(generated_audio, target_sr)
+                    # 将处理后的音频片段添加到列表
+                    generated_audio_list.append(generated_audio)
+            else:
+                logging.info('get instruct inference request')
+                set_all_random_seed(seed)
+                for i in cosyvoice.inference_instruct(tts_text, sft_dropdown, instruct_text, stream=stream,
+                                                      speed=speed):
+                    generated_audio_list.append(i['tts_speech'].numpy().flatten())
+
+            # 合并所有音频片段为一整段
+            if len(generated_audio_list) > 0:
+                errcode = 0
+                errmsg = 'ok'
+                full_audio = np.concatenate(generated_audio_list)
+                logging.info(f'target_sr: {target_sr} full_audio: {full_audio.dtype}')
+                return errcode, errmsg, (target_sr, full_audio)
+            else:
+                errcode = -2
+                errmsg = "音频生成失败，未收到有效的音频数据。"
+                return errcode, errmsg, (target_sr, default_data)
+        except Exception as e:
+            TextProcessor.log_error(e)
+            errcode = -1
+            errmsg = f"音频生成失败，错误信息：{str(e)}"
+            logging.error(errmsg)
             return errcode, errmsg, (target_sr, default_data)
-
-        if instruct_text == '':
-            errcode = 2
-            errmsg = '您正在使用自然语言控制模式, 请输入instruct文本'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if prompt_wav is not None or prompt_text != '':
-            logging.info('您正在使用自然语言控制模式, prompt音频/prompt文本会被忽略')
-
-    if mode_checkbox_group in ['自然语言控制2']:
-        if prompt_wav is None:
-            errcode = 6
-            errmsg = 'prompt音频为空，您是否忘记输入prompt音频？'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if instruct_text == '':
-            errcode = 2
-            errmsg = '您正在使用自然语言控制模式, 请输入instruct文本'
-            return errcode, errmsg, (target_sr, default_data)
-
-    # if cross_lingual mode, please make sure that model is iic/CosyVoice-300M and tts_text prompt_text are different language
-    if mode_checkbox_group in ['跨语种复刻']:
-        if cosyvoice.frontend.instruct is True:
-            errcode = 3
-            errmsg = '您正在使用跨语种复刻模式, 请使用iic/CosyVoice-300M模型'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if instruct_text != '':
-            logging.info('您正在使用跨语种复刻模式, instruct文本会被忽略')
-
-        if prompt_wav is None:
-            errcode = 5
-            errmsg = '您正在使用跨语种复刻模式, 请提供prompt音频'
-            return errcode, errmsg, (target_sr, default_data)
-
-        logging.info('您正在使用跨语种复刻模式, 请确保合成文本和prompt文本为不同语言')
-    # if in zero_shot cross_lingual, please make sure that prompt_text and prompt_wav meets requirements
-    if mode_checkbox_group in ['3s极速复刻', '跨语种复刻', '语音复刻']:
-        if prompt_wav is None:
-            errcode = 6
-            errmsg = 'prompt音频为空，您是否忘记输入prompt音频？'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if torchaudio.info(prompt_wav).sample_rate < prompt_sr:
-            errcode = 7
-            errmsg = 'prompt音频采样率{}低于{}'.format(torchaudio.info(prompt_wav).sample_rate, prompt_sr)
-            return errcode, errmsg, (target_sr, default_data)
-    # sft mode only use sft_dropdown
-    if mode_checkbox_group in ['预训练音色']:
-        if instruct_text != '' or prompt_wav is not None or prompt_text != '':
-            logging.info('您正在使用预训练音色模式，prompt文本/prompt音频/instruct文本会被忽略！')
-    # zero_shot mode only use prompt_wav prompt text
-    if mode_checkbox_group in ['3s极速复刻']:
-        if not prompt_text:
-            asr_processor = AsrProcessor()
-            prompt_text = asr_processor.asr_to_text(prompt_wav)
-
-        if not prompt_text:
-            errcode = 8
-            errmsg = 'prompt文本为空，您是否忘记输入prompt文本？'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if instruct_text != '':
-            logging.info('您正在使用3s极速复刻模式，预训练音色/instruct文本会被忽略！')
-
-    if mode_checkbox_group in ['语音复刻']:
-        if source_wav is None:
-            errcode = 6
-            errmsg = 'source音频为空，您是否忘记输入prompt音频？'
-            return errcode, errmsg, (target_sr, default_data)
-
-        if torchaudio.info(source_wav).sample_rate < prompt_sr:
-            errcode = 7
-            errmsg = 'source音频采样率{}低于{}'.format(torchaudio.info(source_wav).sample_rate, prompt_sr)
-            return errcode, errmsg, (target_sr, default_data)
-
-    generated_audio_list = []  # 用于存储生成的音频片段
-
-    try:
-        # 确保文本以适当的句号结尾
-        tts_text, lang = TextProcessor.ensure_sentence_ends_with_period(tts_text, add_lang_tag)
-
-        if lang == 'zh' or lang == 'zh-cn':  # 中文文本，添加引号，确保不会断句
-            keywords = TextProcessor.get_keywords()
-            tts_text = TextProcessor.replace_chinese_number(tts_text)
-            tts_text = TextProcessor.add_quotation_mark(tts_text, keywords["keywords"], min_length=2)
-            tts_text = TextProcessor.replace_pronunciation(tts_text, keywords["cacoepy"])
-
-        prompt_text, lang = TextProcessor.ensure_sentence_ends_with_period(prompt_text)
-        instruct_text, lang = TextProcessor.ensure_sentence_ends_with_period(instruct_text)
-
-        if mode_checkbox_group == '预训练音色':
-            logging.info('get sft inference request')
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_sft(tts_text, sft_dropdown, stream=stream, speed=speed):
-                generated_audio_list.append(i['tts_speech'].numpy().flatten())
-        elif mode_checkbox_group == '3s极速复刻':
-            logging.info('get zero_shot inference request')
-            logging.info(f'prompt_text: {prompt_text}')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k, stream=stream,
-                                                   speed=speed):
-                # 获取生成的音频片段
-                generated_audio = i['tts_speech'].numpy().flatten()
-                # 去除音频开头的静音部分
-                generated_audio = AudioProcessor.remove_silence(generated_audio, target_sr)
-                # 将处理后的音频片段添加到列表
-                generated_audio_list.append(generated_audio)
-        elif mode_checkbox_group == '跨语种复刻':
-            logging.info('get cross_lingual inference request')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_cross_lingual(tts_text, prompt_speech_16k, stream=stream, speed=speed):
-                generated_audio_list.append(i['tts_speech'].numpy().flatten())
-        elif mode_checkbox_group == '语音复刻':
-            logging.info('get vc long inference request')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
-            source_speech_16k = postprocess(load_wav(source_wav, prompt_sr), target_sr)
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_vc_long(source_speech_16k, prompt_speech_16k, stream=stream, speed=speed):
-                generated_audio_list.append(i)
-        elif mode_checkbox_group == '自然语言控制2':
-            logging.info('get instruct2 inference request')
-            prompt_speech_16k = postprocess(load_wav(prompt_wav, prompt_sr), target_sr)
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_instruct2(tts_text, instruct_text, prompt_speech_16k, stream=stream,
-                                                   speed=speed):
-                # 获取生成的音频片段
-                generated_audio = i['tts_speech'].numpy().flatten()
-                # 去除音频开头的静音部分
-                generated_audio = AudioProcessor.remove_silence(generated_audio, target_sr)
-                # 将处理后的音频片段添加到列表
-                generated_audio_list.append(generated_audio)
-        else:
-            logging.info('get instruct inference request')
-            set_all_random_seed(seed)
-            for i in cosyvoice.inference_instruct(tts_text, sft_dropdown, instruct_text, stream=stream, speed=speed):
-                generated_audio_list.append(i['tts_speech'].numpy().flatten())
-
-        # 合并所有音频片段为一整段
-        if len(generated_audio_list) > 0:
-            errcode = 0
-            errmsg = 'ok'
-            full_audio = np.concatenate(generated_audio_list)
-            logging.info(f'target_sr: {target_sr} full_audio: {full_audio.dtype}')
-            return errcode, errmsg, (target_sr, full_audio)
-        else:
-            errcode = -2
-            errmsg = "音频生成失败，未收到有效的音频数据。"
-            return errcode, errmsg, (target_sr, default_data)
-    except Exception as e:
-        TextProcessor.log_error(e)
-        errcode = -1
-        errmsg = f"音频生成失败，错误信息：{str(e)}"
-        logging.error(errmsg)
-        return errcode, errmsg, (target_sr, default_data)
 
 
 def generate_audio_with_timeout(tts_text, mode_checkbox_group, sft_dropdown, prompt_text, prompt_wav, instruct_text,

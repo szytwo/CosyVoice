@@ -1,6 +1,9 @@
 import threading
+from contextlib import contextmanager
+
 from custom.CosyVoice import CosyVoice, CosyVoice2
 from custom.file_utils import logging
+
 
 class ModelManager:
     def __init__(self, keep_in_memory=True):
@@ -67,3 +70,40 @@ class ModelManager:
             # 非常驻模式：每次加载新实例，但仍需线程安全
             with self.locks[model_type]:
                 return self._load_model(model_type)
+
+    @contextmanager
+    def use_model(self, model_type: str):
+        """
+        上下文管理器，用于非常驻模式下自动释放模型资源。
+        使用示例：
+
+            with model_manager.use_model("cosyvoice") as model:
+                # 使用 model 进行相关操作
+                ...
+        """
+        model = self.get_model(model_type)
+        
+        try:
+            yield model
+        finally:
+            # 如果模型是非常驻模式，使用完后自动释放资源
+            if not self.keep_in_memory:
+                logging.info(f"Releasing model: {model_type}")
+                # 如果模型有特定的释放资源方法，则调用；否则删除引用让GC处理
+                if hasattr(model, "release"):
+                    model.release()
+                del model  # 删除局部引用
+
+    def release_model(self, model_type: str):
+        """
+        释放常驻模式下缓存的模型。
+        """
+        if model_type not in self.models:
+            raise ValueError(f"Unsupported model type: {model_type}")
+
+        with self.locks[model_type]:
+            if self.models[model_type] is not None:
+                logging.info(f"Releasing cached model: {model_type}")
+                if hasattr(self.models[model_type], "release"):
+                    self.models[model_type].release()
+                self.models[model_type] = None
