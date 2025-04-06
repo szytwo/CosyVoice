@@ -52,6 +52,7 @@ pretrained_models/*
 *.tar
 *.whl
 
+/fasttext/
 /test/
 /logs/
 /results/
