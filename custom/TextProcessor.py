@@ -223,7 +223,7 @@ class TextProcessor:
         direct_units = ["年"]
         # 普通数字转换的单位
         low_units = ["月", "日", "小时", "分钟", "秒", "天", "个", "人", "次", "份", "元", "美元", "米", "千克", "升",
-                     "遍", "件", "瓶", "款", "道"]
+                     "遍", "件", "瓶", "款", "道", "多", "条"]
         # 动态生成 suffix_rules
         suffix_rules = {}
         for unit in direct_units:
